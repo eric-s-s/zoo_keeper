@@ -1,0 +1,4 @@
+.idea/
+*__pycache__*
+error.txt
+output.txt
