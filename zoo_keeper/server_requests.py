@@ -1,0 +1,83 @@
+
+import requests
+
+from zoo_keeper import SERVER_URL
+
+
+class BadUrl(ValueError):
+    pass
+
+
+class ServerRequests(object):
+    def __init__(self):
+        self.zoo_addr = '{}/zoos/'.format(SERVER_URL)
+        self.monkey_addr = '{}/monkeys/'.format(SERVER_URL)
+
+    def get_all_monkeys(self) -> dict:
+        request = requests.get(self.monkey_addr)
+        _check_response(request)
+        return request.json()
+
+    def get_all_zoos(self) -> dict:
+        request = requests.get(self.zoo_addr)
+        _check_response(request)
+        return request.json()
+
+    def get_single_monkey(self, monkey_id) -> dict:
+        request = requests.get(self.monkey_addr + str(monkey_id))
+        _check_response(request)
+        return request.json()
+
+    def get_single_zoo(self, zoo_name) -> dict:
+        request = requests.get(self.zoo_addr + zoo_name)
+        _check_response(request)
+        return request.json()
+
+    def get_zoo_from_monkey_id(self, monkey_id) -> dict:
+        request = requests.get(self.monkey_addr + str(monkey_id) + '/zoo')
+        _check_response(request)
+        return request.json()
+
+    def has_zoo(self, zoo_name):
+        request = requests.head(self.zoo_addr + zoo_name)
+        return request.ok
+
+    def has_monkey(self, monkey_id):
+        request = requests.head(self.monkey_addr + str(monkey_id))
+        return request.ok
+
+    def is_monkey_in_zoo(self, monkey_id, zoo_name):
+        request = requests.get(self.monkey_addr + '{}/zoo/name'.format(monkey_id))
+        _check_response(request)
+        return request.json()['name'] == zoo_name
+
+
+def _check_response(request: requests.models.Response):
+    if not request.ok:
+        raise BadUrl('response code: {} for url: {}'.format(request.status_code, request.url))
+
+
+def _get_json(request: requests.models.Response) -> dict:
+    if request.status_code != 200:
+        return {}
+    return request.json()
+
+
+if __name__ == '__main__':
+    """
+    here be pseudo-tests.
+    """
+    zoo = "The Boringest Zoo On Earth"
+    sr = ServerRequests()
+    from pprint import pprint
+    pprint(sr.get_all_monkeys())
+    pprint(sr.get_all_zoos())
+    pprint(sr.get_single_monkey(1))
+    pprint(sr.get_single_zoo(zoo))
+    pprint(sr.get_zoo_from_monkey_id(1))
+    print(sr.has_zoo(zoo))
+    print(sr.has_zoo('no'))
+    print(sr.has_monkey(1))
+    print(sr.has_monkey(10))
+    print(sr.is_monkey_in_zoo(1, "nope"))
+    print(sr.is_monkey_in_zoo(2, zoo))
