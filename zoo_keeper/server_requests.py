@@ -9,9 +9,10 @@ class BadUrl(ValueError):
 
 
 class ServerRequests(object):
-    def __init__(self):
-        self.zoo_addr = '{}/zoos/'.format(SERVER_URL)
-        self.monkey_addr = '{}/monkeys/'.format(SERVER_URL)
+    def __init__(self, server_url=SERVER_URL):
+        self.server_url = server_url
+        self.zoo_addr = '{}/zoos/'.format(self.server_url)
+        self.monkey_addr = '{}/monkeys/'.format(self.server_url)
 
     def get_all_monkeys(self) -> dict:
         request = requests.get(self.monkey_addr)
@@ -55,12 +56,6 @@ class ServerRequests(object):
 def _check_response(request: requests.models.Response):
     if not request.ok:
         raise BadUrl('response code: {} for url: {}'.format(request.status_code, request.url))
-
-
-def _get_json(request: requests.models.Response) -> dict:
-    if request.status_code != 200:
-        return {}
-    return request.json()
 
 
 if __name__ == '__main__':

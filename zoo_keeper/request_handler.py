@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 import json
 
-from zoo_keeper.zoo_keeper_class import ZooKeeper, Session
+from zoo_keeper.zoo_keeper_class import ZooKeeper
 from zoo_keeper.server_requests import ServerRequests
+from zoo_keeper.session import Session
 
 
 class RequestHandler(object):
@@ -21,10 +22,9 @@ class RequestHandler(object):
         return json.dumps(response), response_code
 
     def get_all_zookeepers(self):
-        response_code = 200
         zoo_keepers = self.session.query(ZooKeeper).all()
         for keeper in zoo_keepers:
-            new_keeper = self._get_details(keeper)
+            keeper.se
 
     def _get_details(self, zoo_keeper_dict):
         pass
