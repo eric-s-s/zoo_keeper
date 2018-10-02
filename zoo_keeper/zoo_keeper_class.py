@@ -34,18 +34,14 @@ class ZooKeeper(Base):
         keys = ['name', 'age', 'zoo_name', 'favorite_monkey', 'dream_monkey']
         return {key: getattr(self, key) for key in keys}
 
-    def set_attribute(self, key, value):
+    def set_attributes(self, **kwargs):
         """
 
         :raises ValueError: If value is illegal
         """
-        needs_validation = ('zoo_name', 'favorite_monkey', 'dream_monkey')
-        if key in needs_validation:
-            validator = Validator()
-            kwargs = {validator_key: getattr(self, validator_key) for validator_key in needs_validation}
-            kwargs.update({key: value})
-            validator.raise_value_errors(**kwargs)
-        setattr(self, key, value)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        Validator().raise_value_errors(self.zoo_name, self.favorite_monkey, self.dream_monkey)
 
     def confirm_status(self):
         """
@@ -72,12 +68,10 @@ if __name__ == '__main__':
     Base.metadata.create_all(engine)
     with safe_session() as session:
         keeper = ZooKeeper(name='joe', age=10)
-        session.add(keeper)
-        session.commit()
         print(session.query(ZooKeeper).all())
         print(session.query(ZooKeeper).first().to_dict())
-        keeper.set_attribute('age', 11)
-        keeper.set_attribute('zoo_name', 'Wacky Zachy\'s Monkey Attacky')
-        keeper.set_attribute('favorite_monkey', 1)
-        keeper.set_attribute('dream_monkey', 2)
+        keeper.set_attributes(age=11)
+        keeper.set_attributes(zoo_name='Wacky Zachy\'s Monkey Attacky')
+        keeper.set_attributes(favorite_monkey=1)
+        keeper.set_attributes(dream_monkey=1)
         session.commit()

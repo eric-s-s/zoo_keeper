@@ -25,32 +25,41 @@ class ServerRequests(object):
         return request.json()
 
     def get_single_monkey(self, monkey_id) -> dict:
+        if monkey_id is None:
+            return {}
         request = requests.get(self.monkey_addr + str(monkey_id))
         _check_response(request)
         return request.json()
 
     def get_single_zoo(self, zoo_name) -> dict:
+        if zoo_name is None:
+            return {}
         request = requests.get(self.zoo_addr + zoo_name)
         _check_response(request)
         return request.json()
 
     def get_zoo_from_monkey_id(self, monkey_id) -> dict:
+        if monkey_id is None:
+            return {}
         request = requests.get(self.monkey_addr + str(monkey_id) + '/zoo')
         _check_response(request)
         return request.json()
 
-    def has_zoo(self, zoo_name):
+    def has_zoo(self, zoo_name) -> bool:
         request = requests.head(self.zoo_addr + zoo_name)
         return request.ok
 
-    def has_monkey(self, monkey_id):
+    def has_monkey(self, monkey_id) -> bool:
         request = requests.head(self.monkey_addr + str(monkey_id))
         return request.ok
 
-    def is_monkey_in_zoo(self, monkey_id, zoo_name):
+    def is_monkey_in_zoo(self, monkey_id, zoo_name) -> bool:
+        if None in (monkey_id, zoo_name):
+            return False
         request = requests.get(self.monkey_addr + '{}/zoo/name'.format(monkey_id))
         _check_response(request)
-        return request.json()['name'] == zoo_name
+        test_json = request.json()
+        return test_json and test_json['name'] == zoo_name
 
 
 def _check_response(request: requests.models.Response):
@@ -76,3 +85,8 @@ if __name__ == '__main__':
     print(sr.has_monkey(10))
     print(sr.is_monkey_in_zoo(1, "nope"))
     print(sr.is_monkey_in_zoo(2, zoo))
+
+    print(sr.get_single_monkey(None))
+
+    print(sr.get_single_zoo(None))
+    print(sr.get_zoo_from_monkey_id(None))

@@ -31,4 +31,4 @@ class Validator(object):
         if not self.is_favorite_monkey_ok(favorite_monkey, zoo_name):
             raise ValueError('monkey: "{}" does not exist or is not in zoo: "{}"'.format(favorite_monkey, zoo_name))
         if not self.is_dream_monkey_ok(dream_monkey, zoo_name):
-            raise ValueError('monkey: "{}" does not exist or is not in zoo: "{}"'.format(dream_monkey, zoo_name))
+            raise ValueError('monkey: "{}" does not exist or IS in zoo: "{}"'.format(dream_monkey, zoo_name))
