@@ -3,7 +3,7 @@ from functools import partial
 from flask import Flask, request
 from werkzeug.exceptions import BadRequest
 
-from zoo_keeper.request_handler import safe_handler, RequestHandler
+from zoo_keeper_server.db_request_handler import safe_handler, DBRequestHandler
 
 
 app = Flask(__name__)
@@ -11,19 +11,19 @@ app = Flask(__name__)
 
 @app.route('/zoos/', methods=['GET'])
 def all_zoos():
-    with safe_handler() as handler:  # type: RequestHandler
+    with safe_handler() as handler:  # type: DBRequestHandler
         return handler.get_all_zoos()
 
 
 @app.route('/monkeys/', methods=['GET'])
 def all_monkeys():
-    with safe_handler() as handler:  # type: RequestHandler
+    with safe_handler() as handler:  # type: DBRequestHandler
         return handler.get_all_zoos()
 
 
-@app.route('/keepers/', methods=['GET', 'POST', 'DELETE'])
-def all_keepers():
-    with safe_handler() as handler:  # type: RequestHandler
+@app.route('/zoo_keepers/', methods=['GET', 'POST'])
+def all_zoo_keepers():
+    with safe_handler() as handler:  # type: DBRequestHandler
         method = _get_method()
 
         request_json = _get_json()
@@ -31,32 +31,25 @@ def all_keepers():
         actions = {
             'GET': partial(handler.get_all_zoo_keepers),
             'POST': partial(handler.post_zoo_keeper, request_json),
-            'DELETE': partial(handler.delete_all_zoo_keepers)
         }
         reply = actions[method]()
     return reply
 
 
-@app.route('/keepers/<keeper_name>', methods=['GET', 'PUT', 'DELETE'])
-def single_keeper(keeper_name):
-    with safe_handler() as handler:  # type: RequestHandler
+@app.route('/zoo_keepers/<zoo_keeper_id>', methods=['GET', 'PUT', 'DELETE'])
+def single_zoo_keeper(zoo_keeper_id):
+    with safe_handler() as handler:  # type: DBRequestHandler
         method = _get_method()
 
         request_json = _get_json()
 
         actions = {
-            'GET': partial(handler.get_single_zookeeper, keeper_name),
-            'PUT': partial(handler.put_zoo_keeper, keeper_name, request_json),
-            'DELETE': partial(handler.delete_single_zoo_keeper, keeper_name)
+            'GET': partial(handler.get_zoo_keeper, zoo_keeper_id),
+            'PUT': partial(handler.put_zoo_keeper, zoo_keeper_id, request_json),
+            'DELETE': partial(handler.delete_zoo_keeper, zoo_keeper_id)
         }
         reply = actions[method]()
     return reply
-
-
-
-
-
-
 
 
 def _get_json() -> dict:

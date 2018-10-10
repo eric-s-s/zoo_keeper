@@ -1,7 +1,5 @@
-from functools import partial
-
-from zoo_keeper import KEEPER_TABLE
-from zoo_keeper.validator import Validator
+from zoo_keeper_server import ZOO_KEEPER_TABLE
+from zoo_keeper_server.validator import Validator
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,7 +9,7 @@ Base = declarative_base()
 
 
 class ZooKeeper(Base):
-    __tablename__ = KEEPER_TABLE
+    __tablename__ = ZOO_KEEPER_TABLE
 
     id = Column(Integer, primary_key=True)
     name = Column(String(20), unique=True, nullable=False)
@@ -55,7 +53,7 @@ class ZooKeeper(Base):
 
     def set_bad_attributes_to_none(self):
         validator = Validator()
-        if not validator.is_dream_monkey_id_ok(self.dream_monkey_id, self.zoo_id):
+        if not validator.is_dream_monkey_ok(self.dream_monkey_id, self.zoo_id):
             self.dream_monkey_id = None
         if not validator.is_favorite_monkey_ok(self.favorite_monkey_id, self.zoo_id):
             self.favorite_monkey_id = None
@@ -64,9 +62,9 @@ class ZooKeeper(Base):
 
 
 if __name__ == '__main__':
-    from zoo_keeper.session import safe_session, engine
-    Base.metadata.create_all(engine)
-    with safe_session() as session:
+    from zoo_keeper_server.session import create_session
+    session = create_session()
+    try:
         keeper = ZooKeeper(name='joe', age=10)
         print(session.query(ZooKeeper).all())
         print(session.query(ZooKeeper).first().to_dict())
@@ -75,3 +73,5 @@ if __name__ == '__main__':
         keeper.set_attributes(favorite_monkey_id=1)
         keeper.set_attributes(dream_monkey_id=1)
         session.commit()
+    finally:
+        session.close()
