@@ -1,8 +1,8 @@
 import os
 
-USER = "keeper_guest"
+USER = "zoo_keeper_db_user"
 
-DB = "keeper"
+DB = "zoo_keeper_db"
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 

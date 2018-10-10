@@ -17,21 +17,21 @@ class ZooKeeper(Base):
     name = Column(String(20), unique=True, nullable=False)
     age = Column(Integer, nullable=False)
 
-    zoo_name = Column(String(50))
-    favorite_monkey = Column(Integer)
-    dream_monkey = Column(Integer)
+    zoo_id = Column(Integer)
+    favorite_monkey_id = Column(Integer)
+    dream_monkey_id = Column(Integer)
 
-    def __init__(self, name, age, zoo_name=None, favorite_monkey=None, dream_monkey=None):
+    def __init__(self, name, age, zoo_id=None, favorite_monkey_id=None, dream_monkey_id=None):
         validator = Validator()
-        validator.raise_value_errors(zoo_name, favorite_monkey, dream_monkey)
+        validator.raise_value_errors(zoo_id, favorite_monkey_id, dream_monkey_id)
         self.name = name
         self.age = age
-        self.zoo_name = zoo_name
-        self.favorite_monkey = favorite_monkey
-        self.dream_monkey = dream_monkey
+        self.zoo_id = zoo_id
+        self.favorite_monkey_id = favorite_monkey_id
+        self.dream_monkey_id = dream_monkey_id
 
     def to_dict(self):
-        keys = ['name', 'age', 'zoo_name', 'favorite_monkey', 'dream_monkey']
+        keys = ['name', 'age', 'zoo_id', 'favorite_monkey_id', 'dream_monkey_id']
         return {key: getattr(self, key) for key in keys}
 
     def set_attributes(self, **kwargs):
@@ -41,7 +41,7 @@ class ZooKeeper(Base):
         """
         for key, value in kwargs.items():
             setattr(self, key, value)
-        Validator().raise_value_errors(self.zoo_name, self.favorite_monkey, self.dream_monkey)
+        Validator().raise_value_errors(self.zoo_id, self.favorite_monkey_id, self.dream_monkey_id)
 
     def confirm_status(self):
         """
@@ -50,17 +50,17 @@ class ZooKeeper(Base):
         """
         validator = Validator()
         kwargs = {key: getattr(self, key) for key in
-                  ('zoo_name', 'favorite_monkey', 'dream_monkey')}
+                  ('zoo_id', 'favorite_monkey_id', 'dream_monkey_id')}
         validator.raise_value_errors(**kwargs)
 
     def set_bad_attributes_to_none(self):
         validator = Validator()
-        if not validator.is_dream_monkey_ok(self.dream_monkey, self.zoo_name):
-            self.dream_monkey = None
-        if not validator.is_favorite_monkey_ok(self.favorite_monkey, self.zoo_name):
-            self.favorite_monkey = None
-        if not validator.is_zoo_ok(self.zoo_name):
-            self.zoo_name = None
+        if not validator.is_dream_monkey_id_ok(self.dream_monkey_id, self.zoo_id):
+            self.dream_monkey_id = None
+        if not validator.is_favorite_monkey_ok(self.favorite_monkey_id, self.zoo_id):
+            self.favorite_monkey_id = None
+        if not validator.is_zoo_ok(self.zoo_id):
+            self.zoo_id = None
 
 
 if __name__ == '__main__':
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         print(session.query(ZooKeeper).all())
         print(session.query(ZooKeeper).first().to_dict())
         keeper.set_attributes(age=11)
-        keeper.set_attributes(zoo_name='Wacky Zachy\'s Monkey Attacky')
-        keeper.set_attributes(favorite_monkey=1)
-        keeper.set_attributes(dream_monkey=1)
+        keeper.set_attributes(zoo_id=1)
+        keeper.set_attributes(favorite_monkey_id=1)
+        keeper.set_attributes(dream_monkey_id=1)
         session.commit()
