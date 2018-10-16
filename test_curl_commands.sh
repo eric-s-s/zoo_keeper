@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 
-./create_test_data.sh data
+echo creating test data
+cd sql_scripts
+    ./load_test_data.sh
+    eval "$1(./export_db_values.sh)"
+cd ..
 
-mysql zoo -u zoo_guest  -e 'select * from zoo;'
-
-mysql zoo -u zoo_guest  -e 'select * from monkey;'
-
-mysql keeper -u keeper_guest -e 'select * from zoo_keeper;'
+mysql -u${user} -d${db} -e 'select * from zoo_keeper;'
 
 # GET
 printf "\n\n\ncommand: GET monkeys\n\n" | tee  output.txt  error.txt
-curl localhost:5000/monkeys/ >> output.txt 2>> error.txt
+curl localhost:5000/monkeys/ | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand: GET zoos\n\n" | tee  -a output.txt  error.txt
-curl localhost:5000/zoos/ >> output.txt 2>> error.txt
+curl localhost:5000/zoos/ | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand: GET keepers\n\n" | tee  -a output.txt  error.txt
 curl localhost:5000/zoo_keepers/ | jq . >> output.txt 2>> error.txt
@@ -35,7 +35,7 @@ printf "\n\n\ncommand POST keeper ERROR FAVORITE NOT IN ZOO \n\n" | tee  -a outp
 curl -H "content-Type: application/json" -X POST -d\
      "{\"name\": \"Nancy\", \"age\": \"100\",      \
      \"zoo_id\": \"2\", \"favorite_monkey\": \"1\"}" \
-     localhost:5000/zoo_keepers/ >> output.txt 2>> error.txt
+     localhost:5000/zoo_keepers/ | jq . >> output.txt 2>> error.txt
 
 # PUT
 printf "\n\n\ncommand PUT keeper: FULL \n\n" | tee  -a output.txt  error.txt
@@ -84,4 +84,5 @@ printf "\n\n\ncommand delete Joe\n\n" | tee  -a output.txt  error.txt
 curl -X DELETE localhost:5000/zoo_keepers/2 | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand: GET keepers\n\n" | tee  -a output.txt  error.txt
-curl localhost:5000/zoo_keepers/ >> output.txt 2>> error.txt
+curl localhost:5000/zoo_keepers/ | jq . >> output.txt 2>> error.txt
+

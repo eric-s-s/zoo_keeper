@@ -4,7 +4,7 @@ CREATE TABLE zoo_keeper (
     age INT NOT NULL,
     zoo_id INT,
     favorite_monkey_id INT,
-    dream_monkey_id INT
+    dream_monkey_id INT,
     PRIMARY KEY (id)
 );
 

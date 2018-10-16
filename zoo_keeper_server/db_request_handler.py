@@ -1,15 +1,25 @@
 from contextlib import contextmanager
 import json
 
-from zoo_keeper_server.zoo_keeper_class import ZooKeeper
+from zoo_keeper_server.zoo_keeper import ZooKeeper
 from zoo_keeper_server.zoo_service_request_handler import ZooServiceRequestHandler
-from zoo_keeper_server.session import create_session
+
+
+class BadId(ValueError):
+    pass
+
+
+class BadData(ValueError):
+    pass
 
 
 class DBRequestHandler(object):
-    def __init__(self, host='localhost'):
-        self.session = create_session(host)
+    def __init__(self, session):
+        self.session = session
         self.zoo_service_rh = ZooServiceRequestHandler()
+        self.zoo_keeper_keys = {
+            "name", "age", "zoo_id", "favorite_monkey_id", "dream_monkey_id"
+        }
 
     def get_all_zoos(self):
         response = self.zoo_service_rh.get_all_zoos()
@@ -72,9 +82,6 @@ class DBRequestHandler(object):
         self.session.delete(keeper)
         return self.get_all_zoo_keepers()
 
-    def close_connection(self):
-        self.session.close()
-
 
 def _get_code(json_obj):
     if not json_obj:
@@ -95,16 +102,8 @@ def _convert_value(json_value_str):
         return json_value_str
 
 
-@contextmanager
-def safe_handler():
-    handler = DBRequestHandler()
-    try:
-        yield handler
-    finally:
-        handler.close_connection()
-
-
 if __name__ == '__main__':
     # pseudo tests
-    with safe_handler() as sh:  # type: DBRequestHandler
-        print(sh.get_zoo_keeper(1))
+    # with safe_handler() as sh:  # type: DBRequestHandler
+    #     print(sh.get_zoo_keeper(1))
+    pass

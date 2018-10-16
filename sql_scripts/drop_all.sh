@@ -2,7 +2,7 @@
 
 eval "$(./export_db_values.sh)"
 
-tables=$(mysql -u ${user} ${db} -e 'show tables;' | sed -e '/^Tables_in/d')
+tables=$(mysql -h${host} -u${user} ${db} -e 'show tables;' | sed -e '/^Tables_in/d')
 
 printf "removing these tables:\n$tables\n\n"
 
@@ -14,6 +14,6 @@ safety_on="set foreign_key_checks = 1;"
 for t in ${tables[@]}
 do
     echo "bye $t"
-    mysql -u $user $db -e "$safety_off drop table if exists $t; $safety_on"
+    mysql -h${host} -u${user} ${db} -e "${safety_off} drop table if exists ${t}; ${safety_on}"
 done
 

@@ -62,7 +62,7 @@ class ZooKeeper(Base):
 
 
 if __name__ == '__main__':
-    from zoo_keeper_server.session import create_session
+    from zoo_keeper_server.data_base_session import create_session
     session = create_session()
     try:
         keeper = ZooKeeper(name='joe', age=10)

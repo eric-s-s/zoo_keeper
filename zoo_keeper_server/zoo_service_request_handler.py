@@ -1,70 +1,78 @@
-
 import requests
+import json
 
 from zoo_keeper_server import SERVER_URL
 
 
-class BadUrl(ValueError):
+class BadResponse(ValueError):
+    pass
+
+
+class NoResponse(TimeoutError):
     pass
 
 
 class ZooServiceRequestHandler(object):
-    def __init__(self, server_url=SERVER_URL):
+    def __init__(self, server_url=SERVER_URL, timeout=2, request_attempts=3):
         self.server_url = server_url
         self.zoo_addr = '{}/zoos/'.format(self.server_url)
         self.monkey_addr = '{}/monkeys/'.format(self.server_url)
+        self.timeout = timeout
+        self.request_attempts = request_attempts
+
+    def handle_request(self, address, use_get=True):
+        tries = 0
+        if use_get:
+            requests_method = requests.get
+        else:
+            requests_method = requests.head
+
+        while tries < self.request_attempts:
+            try:
+                return requests_method(address, timeout=self.timeout)
+            except requests.exceptions.Timeout:
+                tries += 1
+        info = {"retries": self.request_attempts, "timeout": self.timeout, "address": address}
+        raise NoResponse(json.dumps(info))
 
     def get_all_monkeys(self) -> dict:
-        request = requests.get(self.monkey_addr)
+        request = self.handle_request(self.monkey_addr)
         _check_response(request)
         return request.json()
 
     def get_all_zoos(self) -> dict:
-        request = requests.get(self.zoo_addr)
+        request = self.handle_request(self.zoo_addr)
         _check_response(request)
         return request.json()
 
-    def get_monkey(self, monkey_id) -> dict:
-        if monkey_id is None:
-            return {}
-        request = requests.get(self.monkey_addr + str(monkey_id))
+    def get_monkey(self, monkey_id: int) -> dict:
+        request = self.handle_request(self.monkey_addr + str(monkey_id))
         _check_response(request)
         return request.json()
 
-    def get_zoo(self, zoo_id) -> dict:
-        if zoo_id is None:
-            return {}
-        request = requests.get(self.zoo_addr + str(zoo_id))
+    def get_zoo(self, zoo_id: int) -> dict:
+        request = self.handle_request(self.zoo_addr + str(zoo_id))
         _check_response(request)
         return request.json()
 
-    def get_zoo_from_monkey_id(self, monkey_id) -> dict:
-        if monkey_id is None:
-            return {}
-        request = requests.get(self.monkey_addr + str(monkey_id) + '/zoo')
-        _check_response(request)
-        return request.json()
-
-    def has_zoo(self, zoo_id) -> bool:
-        request = requests.head(self.zoo_addr + str(zoo_id))
+    def has_zoo(self, zoo_id: int) -> bool:
+        request = self.handle_request(self.zoo_addr + str(zoo_id), use_get=False)
         return request.ok
 
-    def has_monkey(self, monkey_id) -> bool:
-        request = requests.head(self.monkey_addr + str(monkey_id))
+    def has_monkey(self, monkey_id: int) -> bool:
+        request = self.handle_request(self.monkey_addr + str(monkey_id), use_get=False)
         return request.ok
 
-    def is_monkey_in_zoo(self, monkey_id, zoo_id) -> bool:
-        if None in (monkey_id, zoo_id):
-            return False
-        request = requests.get(self.monkey_addr + '{}/zoo/name'.format(monkey_id))
+    def is_monkey_in_zoo(self, monkey_id: int, zoo_id: int) -> bool:
+        request = self.handle_request(self.monkey_addr + str(monkey_id))
         _check_response(request)
         test_json = request.json()
-        return test_json and test_json['name'] == zoo_id
+        return test_json['zoo_id'] == zoo_id
 
 
 def _check_response(request: requests.models.Response):
     if not request.ok:
-        raise BadUrl('response code: {} for url: {}'.format(request.status_code, request.url))
+        raise BadResponse(request.json())
 
 
 if __name__ == '__main__':
