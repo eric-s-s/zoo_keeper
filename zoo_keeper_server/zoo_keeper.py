@@ -1,5 +1,6 @@
 from zoo_keeper_server import ZOO_KEEPER_TABLE
 from zoo_keeper_server.validator import Validator
+from zoo_keeper_server.zoo_service_request_handler import NoResponse
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -20,8 +21,10 @@ class ZooKeeper(Base):
     dream_monkey_id = Column(Integer)
 
     def __init__(self, name, age, zoo_id=None, favorite_monkey_id=None, dream_monkey_id=None):
-        validator = Validator()
-        validator.raise_value_errors(zoo_id, favorite_monkey_id, dream_monkey_id)
+        try:
+            Validator().raise_value_errors(zoo_id, favorite_monkey_id, dream_monkey_id)
+        except NoResponse:
+            pass
         self.name = name
         self.age = age
         self.zoo_id = zoo_id
@@ -37,28 +40,38 @@ class ZooKeeper(Base):
 
         :raises ValueError: If value is illegal
         """
+        keys_to_validate = ['zoo_id', 'favorite_monkey_id', 'dream_monkey_id']
+        to_check = {key: kwargs.get(key, getattr(self, key)) for key in keys_to_validate}
+        try:
+            Validator().raise_value_errors(**to_check)
+        except NoResponse:
+            pass
         for key, value in kwargs.items():
             setattr(self, key, value)
-        Validator().raise_value_errors(self.zoo_id, self.favorite_monkey_id, self.dream_monkey_id)
 
     def confirm_status(self):
         """
 
         :raises ValueError: If any value has become illegal
         """
-        validator = Validator()
         kwargs = {key: getattr(self, key) for key in
                   ('zoo_id', 'favorite_monkey_id', 'dream_monkey_id')}
-        validator.raise_value_errors(**kwargs)
+        try:
+            Validator().raise_value_errors(**kwargs)
+        except NoResponse:
+            pass
 
     def set_bad_attributes_to_none(self):
         validator = Validator()
-        if not validator.is_dream_monkey_ok(self.dream_monkey_id, self.zoo_id):
-            self.dream_monkey_id = None
-        if not validator.is_favorite_monkey_ok(self.favorite_monkey_id, self.zoo_id):
-            self.favorite_monkey_id = None
-        if not validator.is_zoo_ok(self.zoo_id):
-            self.zoo_id = None
+        try:
+            if not validator.is_dream_monkey_ok(self.dream_monkey_id, self.zoo_id):
+                self.dream_monkey_id = None
+            if not validator.is_favorite_monkey_ok(self.favorite_monkey_id, self.zoo_id):
+                self.favorite_monkey_id = None
+            if not validator.is_zoo_ok(self.zoo_id):
+                self.zoo_id = None
+        except NoResponse:
+            pass
 
 
 if __name__ == '__main__':

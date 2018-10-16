@@ -32,15 +32,13 @@ class MockRequests(object):
             'text': ""
     }
 
-    sleep_time = 0
 
     @classmethod
-    def head(cls, addr):
+    def head(cls, addr, timeout=1):
         return cls.get(addr)
 
     @classmethod
-    def get(cls, addr):
-        time.sleep(cls.sleep_time)
+    def get(cls, addr, timeout=1):
         address_parts = addr.split('/')
         try:
             id_num = int(address_parts[-1])

@@ -5,7 +5,6 @@ import json
 
 import requests
 import responses
-from functools import partial
 
 from zoo_keeper_server.zoo_service_request_handler import ZooServiceRequestHandler, NoResponse, BadResponse
 from zoo_keeper_server import SERVER_URL
@@ -224,9 +223,3 @@ class TestZooServiceRequestHandler(unittest.TestCase):
 
         expected_calls = [call('http://localhost:8080/monkeys/1', timeout=2)] * 3
         self.assertEqual(expected_calls, mock_get.call_args_list)
-
-
-
-
-
-
