@@ -21,10 +21,6 @@ class ZooKeeper(Base):
     dream_monkey_id = Column(Integer)
 
     def __init__(self, name, age, zoo_id=None, favorite_monkey_id=None, dream_monkey_id=None):
-        try:
-            Validator().raise_value_errors(zoo_id, favorite_monkey_id, dream_monkey_id)
-        except NoResponse:
-            pass
         self.name = name
         self.age = age
         self.zoo_id = zoo_id
@@ -32,7 +28,7 @@ class ZooKeeper(Base):
         self.dream_monkey_id = dream_monkey_id
 
     def to_dict(self):
-        keys = ['name', 'age', 'zoo_id', 'favorite_monkey_id', 'dream_monkey_id']
+        keys = ['id', 'name', 'age', 'zoo_id', 'favorite_monkey_id', 'dream_monkey_id']
         return {key: getattr(self, key) for key in keys}
 
     def set_attributes(self, **kwargs):
@@ -40,12 +36,6 @@ class ZooKeeper(Base):
 
         :raises ValueError: If value is illegal
         """
-        keys_to_validate = ['zoo_id', 'favorite_monkey_id', 'dream_monkey_id']
-        to_check = {key: kwargs.get(key, getattr(self, key)) for key in keys_to_validate}
-        try:
-            Validator().raise_value_errors(**to_check)
-        except NoResponse:
-            pass
         for key, value in kwargs.items():
             setattr(self, key, value)
 

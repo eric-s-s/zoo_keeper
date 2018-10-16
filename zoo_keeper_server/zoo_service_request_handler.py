@@ -32,7 +32,14 @@ class ZooServiceRequestHandler(object):
                 return requests_method(address, timeout=self.timeout)
             except requests.exceptions.Timeout:
                 tries += 1
-        info = {"retries": self.request_attempts, "timeout": self.timeout, "address": address}
+        info = {
+            "error": 504,
+            "title": "gateway timeout",
+            "error_type": "NoResponse",
+            "text": "at address: {}, attempts: {}, timeout after: {} seconds".format(
+                address, self.request_attempts, self.timeout
+            )
+        }
         raise NoResponse(json.dumps(info))
 
     def get_all_monkeys(self) -> dict:
@@ -72,7 +79,7 @@ class ZooServiceRequestHandler(object):
 
 def _check_response(request: requests.models.Response):
     if not request.ok:
-        raise BadResponse(request.json())
+        raise BadResponse(json.dumps(request.json()))
 
 
 if __name__ == '__main__':

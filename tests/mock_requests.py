@@ -32,7 +32,6 @@ class MockRequests(object):
             'text': ""
     }
 
-
     @classmethod
     def head(cls, addr, timeout=1):
         return cls.get(addr)
@@ -40,21 +39,20 @@ class MockRequests(object):
     @classmethod
     def get(cls, addr, timeout=1):
         address_parts = addr.split('/')
+        if address_parts[-1] == '' and address_parts[-2] == 'zoos':
+            return MockResponse(cls.all_zoo_jsons(), 200)
+        if address_parts[-1] == '' and address_parts[-2] == 'monkeys':
+            return MockResponse(cls.all_monkey_jsons(), 200)
+
         try:
             id_num = int(address_parts[-1])
         except ValueError:
-            id_num = None
+            return MockResponse(cls.not_found_json(address_parts[-1]), 404)
 
-        if id_num is None:
-            if 'zoos' in address_parts:
-                json_data = cls.all_zoo_jsons()
-            else:
-                json_data = cls.all_monkey_jsons()
+        if 'zoos' in address_parts:
+            json_data = cls.zoo_json(id_num)
         else:
-            if 'zoos' in address_parts:
-                json_data = cls.zoo_json(id_num)
-            else:
-                json_data = cls.monkey_json(id_num)
+            json_data = cls.monkey_json(id_num)
 
         status_code = 200
         if 'error' in json_data:

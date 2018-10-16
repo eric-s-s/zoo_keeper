@@ -42,9 +42,17 @@ class TestZooServiceRequestHandler(unittest.TestCase):
     @patch(REQUESTS_GET_PATCH)
     def test_handle_request_with_timeout(self, mock_get):
         mock_get.side_effect = requests.exceptions.Timeout('nope')
+        with self.assertRaises(NoResponse) as cm:
+            self.handler.handle_request('http://oops')
 
-        self.assertRaises(NoResponse, self.handler.handle_request, 'http://oops')
-
+        error = cm.exception
+        expected = {
+            'error': 504,
+            'title': 'gateway timeout',
+            'error_type': 'NoResponse',
+            'text': 'at address: http://oops, attempts: 3, timeout after: 2 seconds'
+        }
+        self.assertEqual(json.loads(error.args[0]), expected)
         expected_calls = [call('http://oops', timeout=2)] * 3
         self.assertEqual(expected_calls, mock_get.call_args_list)
 
@@ -107,7 +115,17 @@ class TestZooServiceRequestHandler(unittest.TestCase):
     @responses.activate
     def test_get_zoo_incorrect_address(self):
         mock_call_back(responses.GET, 'http://localhost:8080/zoos/10')
-        self.assertRaises(BadResponse, self.handler.get_zoo, 10)
+        with self.assertRaises(BadResponse) as cm:
+            self.handler.get_zoo(10)
+        error = cm.exception
+        error_json = json.loads(error.args[0])
+        expected = {
+            'error': 404,
+            'error_type': 'BadId',
+            'title': 'not found',
+            'text': error_json['text']
+        }
+        self.assertEqual(expected, error_json)
 
     @responses.activate
     def test_get_monkey_correct_address(self):
@@ -119,7 +137,17 @@ class TestZooServiceRequestHandler(unittest.TestCase):
     @responses.activate
     def test_get_monkey_incorrect_address(self):
         mock_call_back(responses.GET, 'http://localhost:8080/monkeys/10')
-        self.assertRaises(BadResponse, self.handler.get_monkey, 10)
+        with self.assertRaises(BadResponse) as cm:
+            self.handler.get_monkey(10)
+        error = cm.exception
+        error_json = json.loads(error.args[0])
+        expected = {
+            'error': 404,
+            'error_type': 'BadId',
+            'title': 'not found',
+            'text': error_json['text']
+        }
+        self.assertEqual(expected, error_json)
 
     @responses.activate
     def test_has_monkey_true(self):
