@@ -3,7 +3,7 @@
 
 data_dir="../data"
 
-zoo_keeper_path="$data_dir/test_zoo_keeper_data.txt"
+zoo_keeper_path="$data_dir/zoo_keeper_data.txt"
 
 if [ ! -e $zoo_keeper_path ]; then
     echo "did not provide a correct argument for path to data";

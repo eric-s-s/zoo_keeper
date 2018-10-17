@@ -2,11 +2,11 @@
 
 echo creating test data
 cd sql_scripts
-    ./load_test_data.sh
-    eval "$1(./export_db_values.sh)"
+    ./load_test_data.sh data
+    eval "$(./export_db_values.sh)"
 cd ..
 
-mysql -u${user} -d${db} -e 'select * from zoo_keeper;'
+mysql -u${user} ${db} -e 'select * from zoo_keeper;'
 
 # GET
 printf "\n\n\ncommand: GET monkeys\n\n" | tee  output.txt  error.txt
@@ -28,33 +28,33 @@ curl localhost:5000/zoo_keepers/nope >> output.txt 2>> error.txt
 printf "\n\n\ncommand POST keeper \n\n" | tee  -a output.txt  error.txt
 curl -H "content-Type: application/json" -X POST -d\
      "{\"name\": \"Nancy\", \"age\": \"100\",      \
-     \"zoo_id\": \"2\", \"favorite_monkey\": \"2\"}" \
+     \"zoo_id\": \"2\", \"favorite_monkey_id\": \"2\"}" \
      localhost:5000/zoo_keepers/ | jq . >> output.txt 2>> error.txt
 
-printf "\n\n\ncommand POST keeper ERROR FAVORITE NOT IN ZOO \n\n" | tee  -a output.txt  error.txt
-curl -H "content-Type: application/json" -X POST -d\
-     "{\"name\": \"Nancy\", \"age\": \"100\",      \
-     \"zoo_id\": \"2\", \"favorite_monkey\": \"1\"}" \
-     localhost:5000/zoo_keepers/ | jq . >> output.txt 2>> error.txt
+#printf "\n\n\ncommand POST keeper ERROR FAVORITE NOT IN ZOO \n\n" | tee  -a output.txt  error.txt
+#curl -H "content-Type: application/json" -X POST -d\
+#     "{\"name\": \"Nancy\", \"age\": \"100\",      \
+#     \"zoo_id\": \"2\", \"favorite_monkey_id\": \"1\"}" \
+#     localhost:5000/zoo_keepers/ | jq . >> output.txt 2>> error.txt
 
 # PUT
 printf "\n\n\ncommand PUT keeper: FULL \n\n" | tee  -a output.txt  error.txt
 curl -H "content-Type: application/json" -X PUT -d\
      "{\"age\": \"200\",      \
-     \"zoo_id\": \"1\", \"favorite_monkey\": \"1\"}" \
+     \"zoo_id\": \"1\", \"favorite_monkey_id\": \"1\"}" \
      localhost:5000/zoo_keepers/4 | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand PUT keeper: PARTIAL \n\n" | tee  -a output.txt  error.txt
 curl -H "content-Type: application/json" -X PUT -d\
      "{\"age\": \"300\",      \
-     \"dream_monkey\": \"2\"}" \
+     \"dream_monkey_id\": \"2\"}" \
      localhost:5000/zoo_keepers/4 | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand PUT keeper: ERROR \n\n" | tee  -a output.txt  error.txt
 curl -H "content-Type: application/json" -X PUT -d\
      "{\"age\": \"500\",      \
-     \"dream_monkey\": \"4\"}" \
-     localhost:5000/zoo_keepers/4 >> output.txt 2>> error.txt
+     \"dream_monkey_id\": \"4\"}" \
+     localhost:5000/zoo_keepers/4 | jq . >> output.txt 2>> error.txt
 
 printf "\n\n\ncommand GET keeper: after ERROR did not change values\n\n" | tee  -a output.txt  error.txt
 curl localhost:5000/zoo_keepers/4 | jq . >> output.txt 2>> error.txt

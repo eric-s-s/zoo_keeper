@@ -99,7 +99,6 @@ class TestFlaskApp(unittest.TestCase):
         handler_instance.get_all_zoo_keepers.assert_called_once_with()
         session_instance.close.assert_called_once_with()
 
-
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
     def test_all_monkeys_get(self, handler_class, session_class):
@@ -152,12 +151,6 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         handler_instance.get_all_zoos.assert_called_once_with()
         session_instance.close.assert_called_once_with()
-
-
-
-
-
-
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -300,12 +293,6 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         handler_instance.get_zoo_keeper.assert_called_once_with('1')
         session_instance.close.assert_called_once_with()
-
-
-
-
-
-
 
 
 def create_instances(handler_class_mock, session_class_mock):

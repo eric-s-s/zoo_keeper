@@ -27,18 +27,24 @@ class ZooServiceRequestHandler(object):
         else:
             requests_method = requests.head
 
+        error_text = ""
         while tries < self.request_attempts:
             try:
                 return requests_method(address, timeout=self.timeout)
             except requests.exceptions.Timeout:
                 tries += 1
+            except requests.exceptions.ConnectionError as e:
+                error_text = str(e)
+                break
+        if not error_text:
+            error_text = "at address: {}, attempts: {}, timeout after: {} seconds".format(
+                address, self.request_attempts, self.timeout
+            )
         info = {
             "error": 504,
             "title": "gateway timeout",
             "error_type": "NoResponse",
-            "text": "at address: {}, attempts: {}, timeout after: {} seconds".format(
-                address, self.request_attempts, self.timeout
-            )
+            "text": error_text
         }
         raise NoResponse(json.dumps(info))
 
@@ -80,28 +86,3 @@ class ZooServiceRequestHandler(object):
 def _check_response(request: requests.models.Response):
     if not request.ok:
         raise BadResponse(json.dumps(request.json()))
-
-
-if __name__ == '__main__':
-    """
-    here be pseudo-tests.
-    """
-    zoo = 2
-    sr = ZooServiceRequestHandler()
-    from pprint import pprint
-    pprint(sr.get_all_monkeys())
-    pprint(sr.get_all_zoos())
-    pprint(sr.get_monkey(1))
-    pprint(sr.get_zoo(zoo))
-    pprint(sr.get_zoo_from_monkey_id(1))
-    print(sr.has_zoo(zoo))
-    print(sr.has_zoo('no'))
-    print(sr.has_monkey(1))
-    print(sr.has_monkey(10))
-    print(sr.is_monkey_in_zoo(1, "nope"))
-    print(sr.is_monkey_in_zoo(2, zoo))
-
-    print(sr.get_monkey(None))
-
-    print(sr.get_zoo(None))
-    print(sr.get_zoo_from_monkey_id(None))

@@ -56,6 +56,23 @@ class TestZooServiceRequestHandler(unittest.TestCase):
         expected_calls = [call('http://oops', timeout=2)] * 3
         self.assertEqual(expected_calls, mock_get.call_args_list)
 
+    def test_handle_request_no_connection(self):
+        bad_port = '1000000000'
+        bad_address = 'http://locahost:{}'.format(bad_port)
+
+        with self.assertRaises(NoResponse) as cm:
+            self.handler.handle_request(bad_address)
+        error_json = json.loads(cm.exception.args[0])
+        expected = {
+            'error': 504,
+            'title': 'gateway timeout',
+            'error_type': 'NoResponse',
+        }
+        for key, value in expected.items():
+            self.assertEqual(error_json[key], value)
+        self.assertIn("HTTPConnectionPool(host=", error_json['text'])
+        self.assertIn("port={}".format(bad_port), error_json['text'])
+
     @responses.activate
     def test_handle_request_no_timeout(self):
         responses.add(responses.GET, 'http://hi.com', body='hi')
@@ -251,3 +268,18 @@ class TestZooServiceRequestHandler(unittest.TestCase):
 
         expected_calls = [call('http://localhost:8080/monkeys/1', timeout=2)] * 3
         self.assertEqual(expected_calls, mock_get.call_args_list)
+
+    @patch(REQUESTS_GET_PATCH)
+    def test_is_monkey_in_zoo_with_no_connection(self, mock_get):
+        mock_get.side_effect = requests.exceptions.ConnectionError('oops')
+        with self.assertRaises(NoResponse) as cm:
+            self.handler.is_monkey_in_zoo(1, 1)
+        error_json = json.loads(cm.exception.args[0])
+
+        expected = {
+            'error': 504,
+            'title': 'gateway timeout',
+            'error_type': 'NoResponse',
+            'text': 'oops'
+        }
+        self.assertEqual(expected, error_json)

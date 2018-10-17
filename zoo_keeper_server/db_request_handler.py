@@ -22,13 +22,21 @@ class DBRequestHandler(object):
         self.minimum_zoo_keeper_keys = {'name', 'age'}
 
     def get_all_zoos(self):
-        response = self.zoo_service_rh.get_all_zoos()
-        response_code = _get_code(response)
+        try:
+            response = self.zoo_service_rh.get_all_zoos()
+            response_code = 200
+        except NoResponse as e:
+            response = json.loads(e.args[0])
+            response_code = 504
         return json.dumps(response), response_code
 
     def get_all_monkeys(self):
-        response = self.zoo_service_rh.get_all_monkeys()
-        response_code = _get_code(response)
+        try:
+            response = self.zoo_service_rh.get_all_monkeys()
+            response_code = 200
+        except NoResponse as e:
+            response = json.loads(e.args[0])
+            response_code = 504
         return json.dumps(response), response_code
 
     def get_all_zoo_keepers(self):
