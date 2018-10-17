@@ -56,7 +56,7 @@ class DBRequestHandler(object):
             else:
                 try:
                     json_data = method(zoo_service_id)
-                except (BadResponse, NoResponse)as e:
+                except (BadResponse, NoResponse) as e:
                     json_data = json.loads(e.args[0])
             output_json[key] = json_data
         return output_json

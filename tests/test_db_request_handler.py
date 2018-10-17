@@ -461,4 +461,3 @@ class TestDBRequestHandler(unittest.TestCase):
         }
         self.assertEqual(response_json, expected)
         self.assertEqual(response[1], 200)
-
