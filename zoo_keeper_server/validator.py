@@ -4,8 +4,8 @@ from zoo_keeper_server.zoo_service_request_handler import ZooServiceRequestHandl
 
 
 class Validator(object):
-    def __init__(self):
-        self.zoo_service_rh = ZooServiceRequestHandler()
+    def __init__(self, zoo_service_url):
+        self.zoo_service_rh = ZooServiceRequestHandler(zoo_service_url)
 
     def is_zoo_ok(self, zoo_id: Optional[int]):
         if zoo_id is None:

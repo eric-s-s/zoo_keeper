@@ -7,9 +7,9 @@ import requests
 import tests.create_test_data as test_data
 
 from zoo_keeper_server.db_request_handler import DBRequestHandler, BadId, BadData
-from zoo_keeper_server.zoo_service_request_handler import NoResponse, BadResponse
+from zoo_keeper_server.zoo_service_request_handler import NoResponse
 
-from tests.mock_requests import MockRequests
+from tests.mock_requests import MockRequests, MockResponse
 
 REQUESTS_GET_PATCH = 'requests.get'
 REQUESTS_HEAD_PATCH = 'requests.head'
@@ -19,12 +19,22 @@ class TestDBRequestHandler(unittest.TestCase):
 
     def setUp(self):
         self.session = test_data.TestSession()
-        self.handler = DBRequestHandler(self.session)
+        self.zoo_service_url = "http://localhost:8080"
+        self.handler = DBRequestHandler(self.session, self.zoo_service_url)
         test_data.create_all_test_data(self.session)
         self.maxDiff = None
 
     def tearDown(self):
         self.session.close()
+
+    @patch(REQUESTS_GET_PATCH)
+    def test_other_service_url(self, mock_get):
+        mock_get.return_value = MockResponse({'hi': 1}, 200)
+        handler = DBRequestHandler(self.session, service_url='hi')
+        response = handler.get_all_zoos()
+        self.assertEqual(json.loads(response[0]), {'hi': 1})
+        self.assertEqual(response[1], 200)
+        mock_get.assert_called_once_with('hi/zoos/', timeout=2)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_get_all_monkeys(self):

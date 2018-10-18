@@ -2,4 +2,3 @@ flask
 mysqlclient
 sqlalchemy
 requests
-responses

@@ -14,7 +14,8 @@ PATCH_REQUESTS_STRING = 'zoo_keeper_server.zoo_service_request_handler.requests'
 class TestValidator(unittest.TestCase):
 
     def setUp(self):
-        self.validator = Validator()
+        self.zoo_service_url = "http://localhost:8080"
+        self.validator = Validator(self.zoo_service_url)
 
     @patch(PATCH_REQUESTS_STRING, MockRequests)
     def test_is_zoo_ok(self):

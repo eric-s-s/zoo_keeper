@@ -27,25 +27,27 @@ app_engine = create_engine(
 
 DataBaseSession.configure(bind=app_engine)
 
+ZOO_SERVICE_URL = app.config.get('ZOO_SERVICE_URL')
+
 
 @app.route('/zoos/', methods=['GET'])
 def all_zoos():
     with data_base_session_scope() as session:
-        handler = DBRequestHandler(session)
+        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
         return handler.get_all_zoos()
 
 
 @app.route('/monkeys/', methods=['GET'])
 def all_monkeys():
     with data_base_session_scope() as session:
-        handler = DBRequestHandler(session)
+        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
         return handler.get_all_monkeys()
 
 
 @app.route('/zoo_keepers/', methods=['GET', 'POST'])
 def all_zoo_keepers():
     with data_base_session_scope() as session:
-        handler = DBRequestHandler(session)
+        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
         method = _get_method()
 
         request_json = _get_json()
@@ -61,7 +63,7 @@ def all_zoo_keepers():
 @app.route('/zoo_keepers/<zoo_keeper_id>', methods=['GET', 'PUT', 'DELETE'])
 def single_zoo_keeper(zoo_keeper_id):
     with data_base_session_scope() as session:
-        handler = DBRequestHandler(session)
+        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
         method = _get_method()
 
         request_json = _get_json()

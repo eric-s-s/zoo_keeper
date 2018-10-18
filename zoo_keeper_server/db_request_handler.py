@@ -13,9 +13,9 @@ class BadData(ValueError):
 
 
 class DBRequestHandler(object):
-    def __init__(self, session):
+    def __init__(self, session, service_url):
         self.session = session
-        self.zoo_service_rh = ZooServiceRequestHandler()
+        self.zoo_service_rh = ZooServiceRequestHandler(zoo_service_url=service_url)
         self.zoo_keeper_keys = {
             "name", "age", "zoo_id", "favorite_monkey_id", "dream_monkey_id"
         }
@@ -37,6 +37,7 @@ class DBRequestHandler(object):
         except NoResponse as e:
             response = json.loads(e.args[0])
             response_code = 504
+
         return json.dumps(response), response_code
 
     def get_all_zoo_keepers(self):

@@ -1,8 +1,6 @@
 import requests
 import json
 
-from zoo_keeper_server import SERVER_URL
-
 
 class BadResponse(ValueError):
     pass
@@ -13,8 +11,8 @@ class NoResponse(TimeoutError):
 
 
 class ZooServiceRequestHandler(object):
-    def __init__(self, server_url=SERVER_URL, timeout=2, request_attempts=3):
-        self.server_url = server_url
+    def __init__(self, zoo_service_url, timeout=2, request_attempts=3):
+        self.server_url = zoo_service_url
         self.zoo_addr = '{}/zoos/'.format(self.server_url)
         self.monkey_addr = '{}/monkeys/'.format(self.server_url)
         self.timeout = timeout
