@@ -2,6 +2,7 @@ import json
 
 from zoo_keeper_server.zoo_keeper import ZooKeeper
 from zoo_keeper_server.zoo_service_request_handler import ZooServiceRequestHandler, NoResponse, BadResponse
+from zoo_keeper_server.data_base_session import DataBaseSession
 
 
 class BadId(ValueError):
@@ -13,9 +14,8 @@ class BadData(ValueError):
 
 
 class DBRequestHandler(object):
-    def __init__(self, session, service_url):
-        self.session = session
-        self.zoo_service_rh = ZooServiceRequestHandler(zoo_service_url=service_url)
+    def __init__(self, zoo_service: ZooServiceRequestHandler):
+        self.zoo_service_rh = zoo_service
         self.zoo_keeper_keys = {
             "name", "age", "zoo_id", "favorite_monkey_id", "dream_monkey_id"
         }
@@ -40,13 +40,13 @@ class DBRequestHandler(object):
 
         return json.dumps(response), response_code
 
-    def get_all_zoo_keepers(self):
-        zoo_keepers = self.session.query(ZooKeeper).all()
+    def get_all_zoo_keepers(self, session: DataBaseSession):
+        zoo_keepers = session.query(ZooKeeper).all()
         all_jsons = [self._get_zoo_keeper_json(zoo_keeper) for zoo_keeper in zoo_keepers]
         return json.dumps(all_jsons), 200
 
-    def get_zoo_keeper(self, zoo_keeper_id):
-        zoo_keeper = self.session.query(ZooKeeper).filter(ZooKeeper.id == zoo_keeper_id).first()
+    def get_zoo_keeper(self, session: DataBaseSession, zoo_keeper_id):
+        zoo_keeper = session.query(ZooKeeper).filter(ZooKeeper.id == zoo_keeper_id).first()
         _raise_bad_id_for_none_value(zoo_keeper, zoo_keeper_id)
         zoo_keeper_json = self._get_zoo_keeper_json(zoo_keeper)
         return json.dumps(zoo_keeper_json), 200
@@ -70,23 +70,23 @@ class DBRequestHandler(object):
             output_json[key] = json_data
         return output_json
 
-    def post_zoo_keeper(self, json_data):
+    def post_zoo_keeper(self, session: DataBaseSession, json_data):
         self._raise_bad_data_post(json_data)
         kwargs = _convert_json(json_data)
         new_zoo_keeper = ZooKeeper(**kwargs)
-        self.session.add(new_zoo_keeper)
-        self.session.commit()
-        return self.get_zoo_keeper(new_zoo_keeper.id)
+        session.add(new_zoo_keeper)
+        session.commit()
+        return self.get_zoo_keeper(session, new_zoo_keeper.id)
 
-    def put_zoo_keeper(self, zoo_keeper_id, json_data):
+    def put_zoo_keeper(self, session: DataBaseSession, zoo_keeper_id, json_data):
         self._raise_bad_data_put(json_data)
-        zoo_keeper = self.session.query(ZooKeeper).filter(ZooKeeper.id == zoo_keeper_id).first()  # type: ZooKeeper
+        zoo_keeper = session.query(ZooKeeper).filter(ZooKeeper.id == zoo_keeper_id).first()  # type: ZooKeeper
         _raise_bad_id_for_none_value(zoo_keeper, zoo_keeper_id)
         kwargs = _convert_json(json_data)
         zoo_keeper.set_attributes(**kwargs)
 
-        self.session.commit()
-        return self.get_zoo_keeper(zoo_keeper.id)
+        session.commit()
+        return self.get_zoo_keeper(session, zoo_keeper.id)
 
     def _raise_bad_data_post(self, json_data):
         json_data_keys = set(json_data.keys())
@@ -101,11 +101,11 @@ class DBRequestHandler(object):
             msg = "json keys: {} must be subset of {}".format(json_data_keys, self.zoo_keeper_keys)
             raise BadData(msg)
 
-    def delete_zoo_keeper(self, zoo_keeper_id):
-        zoo_keeper = self.session.query(ZooKeeper).filter(ZooKeeper.id == zoo_keeper_id).first()
+    def delete_zoo_keeper(self, session, zoo_keeper_id):
+        zoo_keeper = session.query(ZooKeeper).filter(ZooKeeper.id == zoo_keeper_id).first()
         _raise_bad_id_for_none_value(zoo_keeper, zoo_keeper_id)
-        self.session.delete(zoo_keeper)
-        return self.get_all_zoo_keepers()
+        session.delete(zoo_keeper)
+        return self.get_all_zoo_keepers(session)
 
 
 def _get_code(json_obj):

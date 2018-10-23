@@ -8,6 +8,7 @@ import tests.create_test_data as test_data
 
 from zoo_keeper_server.db_request_handler import DBRequestHandler, BadId, BadData
 from zoo_keeper_server.zoo_service_request_handler import NoResponse
+from zoo_keeper_server.zoo_service_request_handler import ZooServiceRequestHandler
 
 from tests.mock_requests import MockRequests, MockResponse
 
@@ -19,8 +20,7 @@ class TestDBRequestHandler(unittest.TestCase):
 
     def setUp(self):
         self.session = test_data.TestSession()
-        self.zoo_service_url = "http://localhost:8080"
-        self.handler = DBRequestHandler(self.session, self.zoo_service_url)
+        self.handler = DBRequestHandler(ZooServiceRequestHandler("http://localhost:8080"))
         test_data.create_all_test_data(self.session)
         self.maxDiff = None
 
@@ -30,7 +30,7 @@ class TestDBRequestHandler(unittest.TestCase):
     @patch(REQUESTS_GET_PATCH)
     def test_other_service_url(self, mock_get):
         mock_get.return_value = MockResponse({'hi': 1}, 200)
-        handler = DBRequestHandler(self.session, service_url='hi')
+        handler = DBRequestHandler(ZooServiceRequestHandler('hi'))
         response = handler.get_all_zoos()
         self.assertEqual(json.loads(response[0]), {'hi': 1})
         self.assertEqual(response[1], 200)
@@ -97,7 +97,7 @@ class TestDBRequestHandler(unittest.TestCase):
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_get_all_zoo_keepers(self):
-        response = self.handler.get_all_zoo_keepers()
+        response = self.handler.get_all_zoo_keepers(self.session)
         response_json = json.loads(response[0])
 
         expected = [
@@ -178,7 +178,7 @@ class TestDBRequestHandler(unittest.TestCase):
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_get_zoo_keeper_correct(self):
-        response = self.handler.get_zoo_keeper(1)
+        response = self.handler.get_zoo_keeper(self.session, 1)
         response_json = json.loads(response[0])
         expected = {
             'id': 1,
@@ -206,7 +206,7 @@ class TestDBRequestHandler(unittest.TestCase):
         self.assertEqual(expected, response_json)
         self.assertEqual(response[1], 200)
 
-        response = self.handler.get_zoo_keeper(4)
+        response = self.handler.get_zoo_keeper(self.session, 4)
         response_json = json.loads(response[0])
         expected = {
             'id': 4,
@@ -224,12 +224,12 @@ class TestDBRequestHandler(unittest.TestCase):
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_get_zoo_keeper_bad_id(self):
-        self.assertRaises(BadId, self.handler.get_zoo_keeper, 1000)
+        self.assertRaises(BadId, self.handler.get_zoo_keeper, self.session, 1000)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_post_zoo_keeper_minimum_fields(self):
         to_post = {'name': 'e', 'age': 50}
-        first_answer = self.handler.post_zoo_keeper(to_post)
+        first_answer = self.handler.post_zoo_keeper(self.session, to_post)
         first_answer_json = json.loads(first_answer[0])
 
         expected = {'age': 50,
@@ -246,7 +246,7 @@ class TestDBRequestHandler(unittest.TestCase):
         self.assertEqual(expected, first_answer_json)
         self.assertEqual(first_answer[1], 200)
 
-        second_answer = self.handler.get_zoo_keeper(expected['id'])
+        second_answer = self.handler.get_zoo_keeper(self.session, expected['id'])
         self.assertEqual(first_answer, second_answer)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
@@ -254,7 +254,7 @@ class TestDBRequestHandler(unittest.TestCase):
         to_post = {
             'name': 'e', 'age': 50, 'zoo_id': 1, 'favorite_monkey_id': 1, 'dream_monkey_id': 3
         }
-        response = self.handler.post_zoo_keeper(to_post)
+        response = self.handler.post_zoo_keeper(self.session, to_post)
         response_json = json.loads(response[0])
         expected = {
             'age': 50,
@@ -302,24 +302,24 @@ class TestDBRequestHandler(unittest.TestCase):
         self.assertEqual(response_json, expected)
         self.assertEqual(response[1], 200)
 
-        get_response = self.handler.get_zoo_keeper(response_json['id'])
+        get_response = self.handler.get_zoo_keeper(self.session, response_json['id'])
         self.assertEqual(get_response, response)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_post_zoo_keeper_bad_data(self):
 
         to_post = {'oops': 1}
-        self.assertRaises(BadData, self.handler.post_zoo_keeper, to_post)
+        self.assertRaises(BadData, self.handler.post_zoo_keeper, self.session, to_post)
 
         to_post = {'oops': 1, 'name': 'd', 'age': 10}
-        self.assertRaises(BadData, self.handler.post_zoo_keeper, to_post)
+        self.assertRaises(BadData, self.handler.post_zoo_keeper, self.session, to_post)
 
         to_post = {'oops': 1, 'name': 'd', 'age': 10, 'zoo_id': 1,
                    'favorite_monkey_id': 1, 'dream_monkey_id': 3}
-        self.assertRaises(BadData, self.handler.post_zoo_keeper, to_post)
+        self.assertRaises(BadData, self.handler.post_zoo_keeper, self.session, to_post)
 
         to_post = {'name': 'd'}
-        self.assertRaises(BadData, self.handler.post_zoo_keeper, to_post)
+        self.assertRaises(BadData, self.handler.post_zoo_keeper, self.session, to_post)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_put_zoo_keeper_all_fields(self):
@@ -327,7 +327,7 @@ class TestDBRequestHandler(unittest.TestCase):
         to_put = {
             'name': 'e', 'age': 50, 'zoo_id': 1, 'favorite_monkey_id': 1, 'dream_monkey_id': 3
         }
-        response = self.handler.put_zoo_keeper(to_put_id, to_put)
+        response = self.handler.put_zoo_keeper(self.session, to_put_id, to_put)
         response_json = json.loads(response[0])
         expected = {
             'age': 50,
@@ -375,7 +375,7 @@ class TestDBRequestHandler(unittest.TestCase):
         self.assertEqual(response_json, expected)
         self.assertEqual(response[1], 200)
 
-        get_response = self.handler.get_zoo_keeper(to_put_id)
+        get_response = self.handler.get_zoo_keeper(self.session, to_put_id)
         self.assertEqual(get_response, response)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
@@ -383,7 +383,7 @@ class TestDBRequestHandler(unittest.TestCase):
         to_put_id = 4
         to_put = {"zoo_id": 1, "name": "new"}
 
-        current_state = json.loads(self.handler.get_zoo_keeper(to_put_id)[0])
+        current_state = json.loads(self.handler.get_zoo_keeper(self.session, to_put_id)[0])
         expected = {
             'age': 40,
             'dream_monkey': {},
@@ -405,50 +405,50 @@ class TestDBRequestHandler(unittest.TestCase):
         }
         self.assertNotEqual(current_state, expected)
 
-        response = self.handler.put_zoo_keeper(to_put_id, to_put)
+        response = self.handler.put_zoo_keeper(self.session, to_put_id, to_put)
         self.assertEqual(json.loads(response[0]), expected)
         self.assertEqual(response[1], 200)
 
-        get_response = self.handler.get_zoo_keeper(to_put_id)
+        get_response = self.handler.get_zoo_keeper(self.session, to_put_id)
         self.assertEqual(get_response, response)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_put_zoo_keeper_bad_id(self):
-        self.assertRaises(BadId, self.handler.put_zoo_keeper, 1000, {})
+        self.assertRaises(BadId, self.handler.put_zoo_keeper, self.session, 1000, {})
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_put_zoo_keeper_bad_data(self):
 
         to_put = {'oops': 1}
-        self.assertRaises(BadData, self.handler.put_zoo_keeper, 1, to_put)
+        self.assertRaises(BadData, self.handler.put_zoo_keeper, self.session, 1, to_put)
 
         to_put = {'oops': 1, 'name': 'd', 'age': 10}
-        self.assertRaises(BadData, self.handler.put_zoo_keeper, 1, to_put)
+        self.assertRaises(BadData, self.handler.put_zoo_keeper, self.session, 1, to_put)
 
         to_put = {'oops': 1, 'name': 'd', 'age': 10, 'zoo_id': 1,
                   'favorite_monkey_id': 1, 'dream_monkey_id': 3}
-        self.assertRaises(BadData, self.handler.put_zoo_keeper, 1, to_put)
+        self.assertRaises(BadData, self.handler.put_zoo_keeper, self.session, 1, to_put)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_delete_zoo_keeper(self):
-        current_zoo_keepers = json.loads(self.handler.get_all_zoo_keepers()[0])
-        response = self.handler.delete_zoo_keeper(1)
+        current_zoo_keepers = json.loads(self.handler.get_all_zoo_keepers(self.session)[0])
+        response = self.handler.delete_zoo_keeper(self.session, 1)
         self.assertNotEqual(json.loads(response[0]), current_zoo_keepers)
         del current_zoo_keepers[0]
         self.assertEqual(json.loads(response[0]), current_zoo_keepers)
         self.assertEqual(response[1], 200)
 
-        self.assertRaises(BadId, self.handler.get_zoo_keeper, 1)
+        self.assertRaises(BadId, self.handler.get_zoo_keeper, self.session, 1)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_delete_zoo_keeper_bad_id(self):
-        self.assertRaises(BadId, self.handler.delete_zoo_keeper, 100)
+        self.assertRaises(BadId, self.handler.delete_zoo_keeper, self.session, 100)
 
     @patch(REQUESTS_GET_PATCH)
     def test_zoo_service_no_response(self, mock_get):
         mock_get.side_effect = requests.exceptions.Timeout()
 
-        response = self.handler.get_zoo_keeper(3)
+        response = self.handler.get_zoo_keeper(self.session, 3)
         response_json = json.loads(response[0])
         expected = {
             'id': 3,
@@ -470,7 +470,7 @@ class TestDBRequestHandler(unittest.TestCase):
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_zoo_service_bad_id(self):
-        response = self.handler.post_zoo_keeper({'name': 'e', 'age': 50, 'zoo_id': 100})
+        response = self.handler.post_zoo_keeper(self.session, {'name': 'e', 'age': 50, 'zoo_id': 100})
         response_json = json.loads(response[0])
         expected = {
             'age': 50,

@@ -1,15 +1,14 @@
 from functools import partial
 
 from flask import Flask, request, jsonify
-from werkzeug.exceptions import BadRequest
-
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
+from werkzeug.exceptions import BadRequest
 
 from zoo_keeper_server import USER, DB
-from zoo_keeper_server.db_request_handler import DBRequestHandler, BadData, BadId
 from zoo_keeper_server.data_base_session import DataBaseSession, data_base_session_scope
-
+from zoo_keeper_server.db_request_handler import DBRequestHandler, BadData, BadId
+from zoo_keeper_server.zoo_service_request_handler import ZooServiceRequestHandler
 
 app = Flask(__name__)
 app.config.from_object('zoo_keeper_server.flask_app_default_config')
@@ -32,29 +31,27 @@ ZOO_SERVICE_URL = app.config.get('ZOO_SERVICE_URL')
 
 @app.route('/zoos/', methods=['GET'])
 def all_zoos():
-    with data_base_session_scope() as session:
-        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
-        return handler.get_all_zoos()
+    handler = DBRequestHandler(ZooServiceRequestHandler(ZOO_SERVICE_URL))
+    return handler.get_all_zoos()
 
 
 @app.route('/monkeys/', methods=['GET'])
 def all_monkeys():
-    with data_base_session_scope() as session:
-        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
-        return handler.get_all_monkeys()
+    handler = DBRequestHandler(ZooServiceRequestHandler(ZOO_SERVICE_URL))
+    return handler.get_all_monkeys()
 
 
 @app.route('/zoo_keepers/', methods=['GET', 'POST'])
 def all_zoo_keepers():
     with data_base_session_scope() as session:
-        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
+        handler = DBRequestHandler(ZooServiceRequestHandler(ZOO_SERVICE_URL))
         method = _get_method()
 
         request_json = _get_json()
 
         actions = {
-            'GET': partial(handler.get_all_zoo_keepers),
-            'POST': partial(handler.post_zoo_keeper, request_json),
+            'GET': partial(handler.get_all_zoo_keepers, session),
+            'POST': partial(handler.post_zoo_keeper, session, request_json),
         }
         reply = actions[method]()
     return reply
@@ -63,15 +60,15 @@ def all_zoo_keepers():
 @app.route('/zoo_keepers/<zoo_keeper_id>', methods=['GET', 'PUT', 'DELETE'])
 def single_zoo_keeper(zoo_keeper_id):
     with data_base_session_scope() as session:
-        handler = DBRequestHandler(session, ZOO_SERVICE_URL)
+        handler = DBRequestHandler(ZooServiceRequestHandler(ZOO_SERVICE_URL))
         method = _get_method()
 
         request_json = _get_json()
 
         actions = {
-            'GET': partial(handler.get_zoo_keeper, zoo_keeper_id),
-            'PUT': partial(handler.put_zoo_keeper, zoo_keeper_id, request_json),
-            'DELETE': partial(handler.delete_zoo_keeper, zoo_keeper_id)
+            'GET': partial(handler.get_zoo_keeper, session, zoo_keeper_id),
+            'PUT': partial(handler.put_zoo_keeper, session, zoo_keeper_id, request_json),
+            'DELETE': partial(handler.delete_zoo_keeper, session, zoo_keeper_id)
         }
         reply = actions[method]()
     return reply

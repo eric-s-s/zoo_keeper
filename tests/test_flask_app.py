@@ -27,8 +27,7 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.data, b'ok')
         self.assertEqual(response.status_code, 200)
 
-        handler_instance.get_all_zoo_keepers.assert_called_once_with()
-
+        handler_instance.get_all_zoo_keepers.assert_called_once_with(session_instance)
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -42,29 +41,28 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.data, b'ok')
         self.assertEqual(response.status_code, 200)
 
-        handler_instance.post_zoo_keeper.assert_called_once_with(json_data)
-
+        handler_instance.post_zoo_keeper.assert_called_once_with(session_instance, json_data)
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
     def test_all_zoo_keepers_post_bad_data(self, handler_class, session_class):
         handler_instance, session_instance = create_instances(handler_class, session_class)
-        bad_data = {'ooop': 1}
-        handler_instance.post_zoo_keeper.side_effect = BadData(json.dumps(bad_data))
+        bad_data = 'hi'
+        handler_instance.post_zoo_keeper.side_effect = BadData(bad_data)
 
-        response = self.app.post('/zoo_keepers/', json=bad_data)
+        response = self.app.post('/zoo_keepers/', json={})
 
         response_json = json.loads(response.data)
         expected = {
             'error': 400,
             'error_type': 'BadData',
             'title': 'bad request',
-            'text': json.dumps(bad_data)
+            'text': bad_data
         }
         self.assertEqual(response_json, expected)
         self.assertEqual(response.status_code, 400)
-        handler_instance.post_zoo_keeper.assert_called_once_with(bad_data)
+        handler_instance.post_zoo_keeper.assert_called_once_with(session_instance, {})
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -83,8 +81,8 @@ class TestFlaskApp(unittest.TestCase):
         }
         self.assertEqual(response_json, expected)
         self.assertEqual(response.status_code, 400)
-        session_instance.close.assert_called_once_with()
         handler_instance.post_zoo_keeper.assert_not_called()
+        session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -96,7 +94,7 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, b"")
 
-        handler_instance.get_all_zoo_keepers.assert_called_once_with()
+        handler_instance.get_all_zoo_keepers.assert_called_once_with(session_instance)
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -111,8 +109,6 @@ class TestFlaskApp(unittest.TestCase):
 
         handler_instance.get_all_monkeys.assert_called_once_with()
 
-        session_instance.close.assert_called_once_with()
-
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
     def test_all_monkeys_head(self, handler_class, session_class):
@@ -124,7 +120,6 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.data, b"")
 
         handler_instance.get_all_monkeys.assert_called_once_with()
-        session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -137,7 +132,6 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         handler_instance.get_all_zoos.assert_called_once_with()
-        session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -150,7 +144,6 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.data, b"")
         self.assertEqual(response.status_code, 200)
         handler_instance.get_all_zoos.assert_called_once_with()
-        session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -161,7 +154,7 @@ class TestFlaskApp(unittest.TestCase):
         response = self.app.get('/zoo_keepers/1')
         self.assertEqual(response.data, b'ok')
         self.assertEqual(response.status_code, 200)
-        handler_instance.get_zoo_keeper.assert_called_once_with('1')
+        handler_instance.get_zoo_keeper.assert_called_once_with(session_instance, '1')
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -180,7 +173,7 @@ class TestFlaskApp(unittest.TestCase):
         }
         self.assertEqual(response_json, expected)
         self.assertEqual(response.status_code, 404)
-        handler_instance.get_zoo_keeper.assert_called_once_with('100')
+        handler_instance.get_zoo_keeper.assert_called_once_with(session_instance, '100')
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -191,7 +184,7 @@ class TestFlaskApp(unittest.TestCase):
         response = self.app.delete('/zoo_keepers/1')
         self.assertEqual(response.data, b'ok')
         self.assertEqual(response.status_code, 200)
-        handler_instance.delete_zoo_keeper.assert_called_once_with('1')
+        handler_instance.delete_zoo_keeper.assert_called_once_with(session_instance, '1')
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -210,7 +203,7 @@ class TestFlaskApp(unittest.TestCase):
         }
         self.assertEqual(response_json, expected)
         self.assertEqual(response.status_code, 404)
-        handler_instance.delete_zoo_keeper.assert_called_with('1000')
+        handler_instance.delete_zoo_keeper.assert_called_once_with(session_instance, '1000')
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -222,7 +215,7 @@ class TestFlaskApp(unittest.TestCase):
         response = self.app.put('/zoo_keepers/1', json={'a': 1})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, b'ok')
-        handler_instance.put_zoo_keeper.assert_called_once_with('1', {'a': 1})
+        handler_instance.put_zoo_keeper.assert_called_once_with(session_instance, '1', {'a': 1})
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -241,7 +234,7 @@ class TestFlaskApp(unittest.TestCase):
         }
         self.assertEqual(response_json, expected)
         self.assertEqual(response.status_code, 404)
-        handler_instance.put_zoo_keeper.assert_called_once_with('1', {'a': 1})
+        handler_instance.put_zoo_keeper.assert_called_once_with(session_instance, '1', {'a': 1})
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -260,7 +253,7 @@ class TestFlaskApp(unittest.TestCase):
         }
         self.assertEqual(response_json, expected)
         self.assertEqual(response.status_code, 400)
-        handler_instance.put_zoo_keeper.assert_called_once_with('1', {'a': 1})
+        handler_instance.put_zoo_keeper.assert_called_once_with(session_instance, '1', {'a': 1})
         session_instance.close.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
@@ -291,7 +284,7 @@ class TestFlaskApp(unittest.TestCase):
 
         self.assertEqual(response.data, b"")
         self.assertEqual(response.status_code, 200)
-        handler_instance.get_zoo_keeper.assert_called_once_with('1')
+        handler_instance.get_zoo_keeper.assert_called_once_with(session_instance, '1')
         session_instance.close.assert_called_once_with()
 
 
