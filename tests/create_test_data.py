@@ -11,7 +11,29 @@ from tests.mock_requests import MockRequests
 from zoo_keeper_server.zoo_keeper import Base, ZooKeeper
 
 engine = create_engine("sqlite:///:memory:")
-TestSession = sessionmaker(bind=engine)
+
+
+class TestSession(BaseSession):
+    _close_counts = []
+
+    def __init__(self):
+        super(TestSession, self).__init__(bind=engine)
+
+    @classmethod
+    def close_counts(cls):
+        return len(cls._close_counts)
+
+    def close(self):
+        self._close_counts.append(1)
+        print('closed', self.close_counts())
+        super(TestSession, self).close()
+
+    @classmethod
+    def reset_close_count(cls):
+        cls._close_counts = []
+
+
+# TestSession = sessionmaker(bind=engine, class_=MySession)
 
 
 def load_csv(file_path):

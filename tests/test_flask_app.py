@@ -5,7 +5,8 @@ import json
 
 from zoo_keeper_server import flask_app
 from zoo_keeper_server.db_request_handler import DBRequestHandler, BadData, BadId
-
+from tests.create_test_data import TestSession, create_all_test_data
+from tests.mock_requests import MockRequests
 
 HANDLER_PATCH_STR = 'zoo_keeper_server.flask_app.DBRequestHandler'
 SESSION_PATCH_STR = 'zoo_keeper_server.data_base_session.DataBaseSession'
@@ -15,7 +16,60 @@ class TestFlaskApp(unittest.TestCase):
 
     def setUp(self):
         self.app = flask_app.app.test_client()
+        self.session = TestSession()
         flask_app.app.testing = True
+        create_all_test_data(self.session)
+        TestSession.reset_close_count()
+
+    @patch('requests.get', MockRequests.get)
+    @patch(SESSION_PATCH_STR, TestSession)
+    def test_all_zoo_keepers_get_alt(self):
+        response = self.app.get('/zoo_keepers/')
+
+        expected = [
+            {'id': 1,
+             'age': 10,
+             'dream_monkey': {'id': 3, 'zoo_id': 2},
+             'dream_monkey_id': 3,
+             'favorite_monkey': {'id': 1, 'zoo_id': 1},
+             'favorite_monkey_id': 1,
+             'name': 'a',
+             'zoo': {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
+             'zoo_id': 1
+             },
+            {'id': 2,
+             'age': 20,
+             'dream_monkey': {},
+             'dream_monkey_id': None,
+             'favorite_monkey': {'id': 3, 'zoo_id': 2},
+             'favorite_monkey_id': 3,
+             'name': 'b',
+             'zoo': {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]},
+             'zoo_id': 2
+             },
+            {'id': 3,
+             'age': 30,
+             'dream_monkey': {},
+             'dream_monkey_id': None,
+             'favorite_monkey': {},
+             'favorite_monkey_id': None,
+             'name': 'c',
+             'zoo': {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]},
+             'zoo_id': 2
+             },
+            {'id': 4,
+             'age': 40,
+             'dream_monkey': {},
+             'dream_monkey_id': None,
+             'favorite_monkey': {},
+             'favorite_monkey_id': None,
+             'name': 'd',
+             'zoo': {},
+             'zoo_id': None
+             }
+        ]
+        self.assertEqual(json.loads(response.data), expected)
+        self.assertEqual(TestSession.close_counts(), 1)
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)

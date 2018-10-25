@@ -41,10 +41,10 @@ class TestDBRequestHandler(unittest.TestCase):
         answer = self.handler.get_all_monkeys()
 
         expected = [
-            {'id': 1, 'name': 'a', 'sex': 'm', 'flings_poop': 'TRUE', 'poop_size': 1, 'zoo_id': 1},
-            {'id': 2, 'name': 'b', 'sex': 'f', 'flings_poop': 'TRUE', 'poop_size': 2, 'zoo_id': 1},
-            {'id': 3, 'name': 'a', 'sex': 'm', 'flings_poop': 'FALSE', 'poop_size': 3, 'zoo_id': 2},
-            {'id': 4, 'name': 'a', 'sex': 'f', 'flings_poop': 'FALSE', 'poop_size': 4, 'zoo_id': 2}
+            {'id': 1, 'zoo_id': 1},
+            {'id': 2, 'zoo_id': 1},
+            {'id': 3, 'zoo_id': 2},
+            {'id': 4, 'zoo_id': 2},
         ]
 
         self.assertEqual(json.loads(answer[0]), expected)
@@ -74,22 +74,8 @@ class TestDBRequestHandler(unittest.TestCase):
         answer = self.handler.get_all_zoos()
 
         expected = [
-            {'id': 1,
-             'name': 'a',
-             'opens': '12:00',
-             'closes': '13:00',
-             'monkeys': [
-                 {'id': 1, 'name': 'a', 'sex': 'm', 'flings_poop': 'TRUE', 'poop_size': 1, 'zoo_id': 1},
-                 {'id': 2, 'name': 'b', 'sex': 'f', 'flings_poop': 'TRUE', 'poop_size': 2, 'zoo_id': 1}
-             ]},
-            {'id': 2,
-             'name': 'b',
-             'opens': '14:00',
-             'closes': '15:00',
-             'monkeys': [
-                 {'id': 3, 'name': 'a', 'sex': 'm', 'flings_poop': 'FALSE', 'poop_size': 3, 'zoo_id': 2},
-                 {'id': 4, 'name': 'a', 'sex': 'f', 'flings_poop': 'FALSE', 'poop_size': 4, 'zoo_id': 2}
-             ]}
+            {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
+            {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]}
         ]
 
         self.assertEqual(json.loads(answer[0]), expected)
@@ -103,44 +89,22 @@ class TestDBRequestHandler(unittest.TestCase):
         expected = [
             {'id': 1,
              'age': 10,
-             'dream_monkey': {
-                 'flings_poop': 'FALSE', 'id': 3, 'name': 'a', 'poop_size': 3, 'sex': 'm', 'zoo_id': 2
-             },
+             'dream_monkey': {'id': 3, 'zoo_id': 2},
              'dream_monkey_id': 3,
-             'favorite_monkey': {
-                 'flings_poop': 'TRUE', 'id': 1, 'name': 'a', 'poop_size': 1, 'sex': 'm', 'zoo_id': 1
-             },
+             'favorite_monkey': {'id': 1, 'zoo_id': 1},
              'favorite_monkey_id': 1,
              'name': 'a',
-             'zoo': {
-                 'closes': '13:00', 'id': 1,
-                 'monkeys': [
-                     {'flings_poop': 'TRUE', 'id': 1, 'name': 'a', 'poop_size': 1, 'sex': 'm', 'zoo_id': 1},
-                     {'flings_poop': 'TRUE', 'id': 2, 'name': 'b', 'poop_size': 2, 'sex': 'f', 'zoo_id': 1}
-                 ],
-                 'name': 'a',
-                 'opens': '12:00'
-             },
+             'zoo': {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
              'zoo_id': 1
              },
             {'id': 2,
              'age': 20,
              'dream_monkey': {},
              'dream_monkey_id': None,
-             'favorite_monkey': {
-                 'flings_poop': 'FALSE', 'id': 3, 'name': 'a', 'poop_size': 3, 'sex': 'm', 'zoo_id': 2
-             },
+             'favorite_monkey': {'id': 3, 'zoo_id': 2},
              'favorite_monkey_id': 3,
              'name': 'b',
-             'zoo': {
-                 'closes': '15:00',
-                 'id': 2, 'monkeys': [
-                    {'flings_poop': 'FALSE', 'id': 3, 'name': 'a', 'poop_size': 3, 'sex': 'm', 'zoo_id': 2},
-                    {'flings_poop': 'FALSE', 'id': 4, 'name': 'a', 'poop_size': 4, 'sex': 'f', 'zoo_id': 2}
-                 ],
-                 'name': 'b',
-                 'opens': '14:00'
-             },
+             'zoo': {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]},
              'zoo_id': 2
              },
             {'id': 3,
@@ -150,16 +114,7 @@ class TestDBRequestHandler(unittest.TestCase):
              'favorite_monkey': {},
              'favorite_monkey_id': None,
              'name': 'c',
-             'zoo': {
-                 'closes': '15:00',
-                 'id': 2,
-                 'monkeys': [
-                     {'flings_poop': 'FALSE', 'id': 3, 'name': 'a', 'poop_size': 3, 'sex': 'm', 'zoo_id': 2},
-                     {'flings_poop': 'FALSE', 'id': 4, 'name': 'a', 'poop_size': 4, 'sex': 'f', 'zoo_id': 2}
-                 ],
-                 'name': 'b',
-                 'opens': '14:00'
-             },
+             'zoo': {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]},
              'zoo_id': 2
              },
             {'id': 4,
@@ -183,24 +138,12 @@ class TestDBRequestHandler(unittest.TestCase):
         expected = {
             'id': 1,
             'age': 10,
-            'dream_monkey': {
-                'flings_poop': 'FALSE', 'id': 3, 'name': 'a', 'poop_size': 3, 'sex': 'm', 'zoo_id': 2
-            },
+            'dream_monkey': {'id': 3, 'zoo_id': 2},
             'dream_monkey_id': 3,
-            'favorite_monkey': {
-                'flings_poop': 'TRUE', 'id': 1, 'name': 'a', 'poop_size': 1, 'sex': 'm', 'zoo_id': 1},
+            'favorite_monkey': {'id': 1, 'zoo_id': 1},
             'favorite_monkey_id': 1,
             'name': 'a',
-            'zoo': {
-                'closes': '13:00',
-                'id': 1,
-                'monkeys': [
-                    {'flings_poop': 'TRUE', 'id': 1, 'name': 'a', 'poop_size': 1, 'sex': 'm', 'zoo_id': 1},
-                    {'flings_poop': 'TRUE', 'id': 2, 'name': 'b', 'poop_size': 2, 'sex': 'f', 'zoo_id': 1}
-                ],
-                'name': 'a',
-                'opens': '12:00'
-            },
+            'zoo': {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
             'zoo_id': 1
         }
         self.assertEqual(expected, response_json)
@@ -258,46 +201,13 @@ class TestDBRequestHandler(unittest.TestCase):
         response_json = json.loads(response[0])
         expected = {
             'age': 50,
-            'dream_monkey': {
-                'flings_poop': 'FALSE',
-                'id': 3,
-                'name': 'a',
-                'poop_size': 3,
-                'sex': 'm',
-                'zoo_id': 2
-            },
+            'dream_monkey': {'id': 3, 'zoo_id': 2},
             'dream_monkey_id': 3,
-            'favorite_monkey': {
-                'flings_poop': 'TRUE',
-                'id': 1,
-                'name': 'a',
-                'poop_size': 1,
-                'sex': 'm',
-                'zoo_id': 1
-            },
+            'favorite_monkey': {'id': 1, 'zoo_id': 1},
             'favorite_monkey_id': 1,
             'id': response_json['id'],
             'name': 'e',
-            'zoo': {
-                'closes': '13:00',
-                'id': 1,
-                'monkeys': [
-                    {'flings_poop': 'TRUE',
-                     'id': 1,
-                     'name': 'a',
-                     'poop_size': 1,
-                     'sex': 'm',
-                     'zoo_id': 1},
-                    {'flings_poop': 'TRUE',
-                     'id': 2,
-                     'name': 'b',
-                     'poop_size': 2,
-                     'sex': 'f',
-                     'zoo_id': 1}
-                ],
-                'name': 'a',
-                'opens': '12:00'
-            },
+            'zoo': {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
             'zoo_id': 1}
         self.assertEqual(response_json, expected)
         self.assertEqual(response[1], 200)
@@ -331,46 +241,13 @@ class TestDBRequestHandler(unittest.TestCase):
         response_json = json.loads(response[0])
         expected = {
             'age': 50,
-            'dream_monkey': {
-                'flings_poop': 'FALSE',
-                'id': 3,
-                'name': 'a',
-                'poop_size': 3,
-                'sex': 'm',
-                'zoo_id': 2
-            },
+            'dream_monkey': {'id': 3, 'zoo_id': 2},
             'dream_monkey_id': 3,
-            'favorite_monkey': {
-                'flings_poop': 'TRUE',
-                'id': 1,
-                'name': 'a',
-                'poop_size': 1,
-                'sex': 'm',
-                'zoo_id': 1
-            },
+            'favorite_monkey': {'id': 1, 'zoo_id': 1},
             'favorite_monkey_id': 1,
             'id': to_put_id,
             'name': 'e',
-            'zoo': {
-                'closes': '13:00',
-                'id': 1,
-                'monkeys': [
-                    {'flings_poop': 'TRUE',
-                     'id': 1,
-                     'name': 'a',
-                     'poop_size': 1,
-                     'sex': 'm',
-                     'zoo_id': 1},
-                    {'flings_poop': 'TRUE',
-                     'id': 2,
-                     'name': 'b',
-                     'poop_size': 2,
-                     'sex': 'f',
-                     'zoo_id': 1}
-                ],
-                'name': 'a',
-                'opens': '12:00'
-            },
+            'zoo': {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
             'zoo_id': 1}
         self.assertEqual(response_json, expected)
         self.assertEqual(response[1], 200)
@@ -392,15 +269,7 @@ class TestDBRequestHandler(unittest.TestCase):
             'favorite_monkey_id': None,
             'id': 4,
             'name': 'new',
-            'zoo': {
-                'closes': '13:00',
-                'id': 1,
-                'monkeys': [
-                    {'flings_poop': 'TRUE', 'id': 1, 'name': 'a', 'poop_size': 1, 'sex': 'm', 'zoo_id': 1},
-                    {'flings_poop': 'TRUE', 'id': 2, 'name': 'b', 'poop_size': 2, 'sex': 'f', 'zoo_id': 1}
-                ], 'name': 'a',
-                'opens': '12:00'
-            },
+            'zoo': {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
             'zoo_id': 1
         }
         self.assertNotEqual(current_state, expected)

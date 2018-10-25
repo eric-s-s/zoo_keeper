@@ -67,7 +67,7 @@ class TestZooServiceRequestHandler(unittest.TestCase):
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_handle_request_no_timeout(self):
         response = self.handler.handle_request('http://localhost:8080/monkeys/1')
-        expected = {'flings_poop': 'TRUE', 'id': 1, 'name': 'a', 'poop_size': 1, 'sex': 'm', 'zoo_id': 1}
+        expected = {'id': 1, 'zoo_id': 1}
         self.assertEqual(response.json(), expected)
         self.assertEqual(response.status_code, 200)
 
@@ -76,10 +76,10 @@ class TestZooServiceRequestHandler(unittest.TestCase):
 
         response = self.handler.get_all_monkeys()
         expected = [
-            {'id': 1, 'name': 'a', 'sex': 'm', 'flings_poop': 'TRUE', 'poop_size': 1, 'zoo_id': 1},
-            {'id': 2, 'name': 'b', 'sex': 'f', 'flings_poop': 'TRUE', 'poop_size': 2, 'zoo_id': 1},
-            {'id': 3, 'name': 'a', 'sex': 'm', 'flings_poop': 'FALSE', 'poop_size': 3, 'zoo_id': 2},
-            {'id': 4, 'name': 'a', 'sex': 'f', 'flings_poop': 'FALSE', 'poop_size': 4, 'zoo_id': 2}
+            {'id': 1, 'zoo_id': 1},
+            {'id': 2, 'zoo_id': 1},
+            {'id': 3, 'zoo_id': 2},
+            {'id': 4, 'zoo_id': 2}
         ]
         self.assertEqual(response, expected)
 
@@ -87,35 +87,15 @@ class TestZooServiceRequestHandler(unittest.TestCase):
     def test_get_all_zoos(self):
         response = self.handler.get_all_zoos()
         expected = [
-            {'id': 1,
-             'name': 'a',
-             'opens': '12:00',
-             'closes': '13:00',
-             'monkeys': [
-                 {'id': 1, 'name': 'a', 'sex': 'm', 'flings_poop': 'TRUE', 'poop_size': 1, 'zoo_id': 1},
-                 {'id': 2, 'name': 'b', 'sex': 'f', 'flings_poop': 'TRUE', 'poop_size': 2, 'zoo_id': 1}
-             ]},
-            {'id': 2,
-             'name': 'b',
-             'opens': '14:00',
-             'closes': '15:00',
-             'monkeys': [
-                 {'id': 3, 'name': 'a', 'sex': 'm', 'flings_poop': 'FALSE', 'poop_size': 3, 'zoo_id': 2},
-                 {'id': 4, 'name': 'a', 'sex': 'f', 'flings_poop': 'FALSE', 'poop_size': 4, 'zoo_id': 2}
-             ]}
+            {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
+            {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]}
         ]
         self.assertEqual(response, expected)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_get_zoo_correct_address(self):
         response = self.handler.get_zoo(1)
-        expected = {
-            'id': 1, 'name': 'a', 'opens': '12:00', 'closes': '13:00',
-            'monkeys': [
-                {'id': 1, 'name': 'a', 'sex': 'm', 'flings_poop': 'TRUE', 'poop_size': 1, 'zoo_id': 1},
-                {'id': 2, 'name': 'b', 'sex': 'f', 'flings_poop': 'TRUE', 'poop_size': 2, 'zoo_id': 1}
-            ]
-        }
+        expected = {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]}
         self.assertEqual(response, expected)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
@@ -135,7 +115,7 @@ class TestZooServiceRequestHandler(unittest.TestCase):
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_get_monkey_correct_address(self):
         response = self.handler.get_monkey(1)
-        expected = {'id': 1, 'name': 'a', 'sex': 'm', 'flings_poop': 'TRUE', 'poop_size': 1, 'zoo_id': 1}
+        expected = {'id': 1, 'zoo_id': 1}
         self.assertEqual(response, expected)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)

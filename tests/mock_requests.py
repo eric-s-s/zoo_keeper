@@ -15,14 +15,14 @@ class MockResponse(object):
 
 class MockRequests(object):
     zoos = {
-        1: {'id': 1, 'name': 'a', 'opens': '12:00', 'closes': '13:00', 'monkey_ids': [1, 2]},
-        2: {'id': 2, 'name': 'b', 'opens': '14:00', 'closes': '15:00', 'monkey_ids': [3, 4]}
+        1: {'id': 1, 'monkey_ids': [1, 2]},
+        2: {'id': 2, 'monkey_ids': [3, 4]}
     }
     monkeys = {
-        1: {'id': 1, 'name': 'a', 'sex': 'm', 'flings_poop': 'TRUE', 'poop_size': 1, 'zoo_id': 1},
-        2: {'id': 2, 'name': 'b', 'sex': 'f', 'flings_poop': 'TRUE', 'poop_size': 2, 'zoo_id': 1},
-        3: {'id': 3, 'name': 'a', 'sex': 'm', 'flings_poop': 'FALSE', 'poop_size': 3, 'zoo_id': 2},
-        4: {'id': 4, 'name': 'a', 'sex': 'f', 'flings_poop': 'FALSE', 'poop_size': 4, 'zoo_id': 2}
+        1: {'id': 1, 'zoo_id': 1},
+        2: {'id': 2, 'zoo_id': 1},
+        3: {'id': 3, 'zoo_id': 2},
+        4: {'id': 4, 'zoo_id': 2},
     }
     not_found = {
             'error': 404,
