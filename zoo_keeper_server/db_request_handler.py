@@ -105,6 +105,7 @@ class DBRequestHandler(object):
         zoo_keeper = session.query(ZooKeeper).filter(ZooKeeper.id == zoo_keeper_id).first()
         _raise_bad_id_for_none_value(zoo_keeper, zoo_keeper_id)
         session.delete(zoo_keeper)
+        session.commit()
         return self.get_all_zoo_keepers(session)
 
 

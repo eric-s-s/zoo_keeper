@@ -5,7 +5,7 @@ import json
 
 from zoo_keeper_server import flask_app
 from zoo_keeper_server.db_request_handler import DBRequestHandler, BadData, BadId
-from tests.create_test_data import TestSession, create_all_test_data
+from tests.create_test_data import TestSession, create_simple_test_data
 from tests.mock_requests import MockRequests
 
 HANDLER_PATCH_STR = 'zoo_keeper_server.flask_app.DBRequestHandler'
@@ -18,85 +18,41 @@ class TestFlaskApp(unittest.TestCase):
         self.app = flask_app.app.test_client()
         self.session = TestSession()
         flask_app.app.testing = True
-        create_all_test_data(self.session)
+        create_simple_test_data(self.session)
         TestSession.reset_close_count()
 
     @patch('requests.get', MockRequests.get)
     @patch(SESSION_PATCH_STR, TestSession)
-    def test_all_zoo_keepers_get_alt(self):
+    def test_all_zoo_keepers_get(self):
         response = self.app.get('/zoo_keepers/')
 
         expected = [
-            {'id': 1,
-             'age': 10,
-             'dream_monkey': {'id': 3, 'zoo_id': 2},
-             'dream_monkey_id': 3,
-             'favorite_monkey': {'id': 1, 'zoo_id': 1},
-             'favorite_monkey_id': 1,
-             'name': 'a',
+            {'id': 1, 'name': 'a', 'age': 1, 'zoo_id': 1, 'favorite_monkey_id': 2, 'dream_monkey_id': 1,
+             'dream_monkey': {'id': 1, 'zoo_id': 1},
+             'favorite_monkey': {'id': 2, 'zoo_id': 1},
              'zoo': {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
-             'zoo_id': 1
              },
-            {'id': 2,
-             'age': 20,
-             'dream_monkey': {},
-             'dream_monkey_id': None,
-             'favorite_monkey': {'id': 3, 'zoo_id': 2},
-             'favorite_monkey_id': 3,
-             'name': 'b',
-             'zoo': {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]},
-             'zoo_id': 2
-             },
-            {'id': 3,
-             'age': 30,
-             'dream_monkey': {},
-             'dream_monkey_id': None,
-             'favorite_monkey': {},
-             'favorite_monkey_id': None,
-             'name': 'c',
-             'zoo': {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]},
-             'zoo_id': 2
-             },
-            {'id': 4,
-             'age': 40,
-             'dream_monkey': {},
-             'dream_monkey_id': None,
-             'favorite_monkey': {},
-             'favorite_monkey_id': None,
-             'name': 'd',
-             'zoo': {},
-             'zoo_id': None
-             }
+            {'id': 2, 'name': 'b', 'age': 2, 'zoo_id': None, 'favorite_monkey_id': None, 'dream_monkey_id': None,
+             'zoo': {}, 'favorite_monkey': {}, 'dream_monkey': {}},
         ]
         self.assertEqual(json.loads(response.data), expected)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(TestSession.close_counts(), 1)
 
-    @patch(SESSION_PATCH_STR)
-    @patch(HANDLER_PATCH_STR)
-    def test_all_zoo_keepers_get(self, handler_class, session_class):
-        handler_instance, session_instance = create_instances(handler_class, session_class)
-        handler_instance.get_all_zoo_keepers.return_value = 'ok', 200
+    @patch(SESSION_PATCH_STR, TestSession)
+    @patch("requests.get", MockRequests.get)
+    def test_all_zoo_keepers_post(self):
 
-        response = self.app.get('/zoo_keepers/')
-        self.assertEqual(response.data, b'ok')
-        self.assertEqual(response.status_code, 200)
-
-        handler_instance.get_all_zoo_keepers.assert_called_once_with(session_instance)
-        session_instance.close.assert_called_once_with()
-
-    @patch(SESSION_PATCH_STR)
-    @patch(HANDLER_PATCH_STR)
-    def test_all_zoo_keepers_post(self, handler_class, session_class):
-        handler_instance, session_instance = create_instances(handler_class, session_class)
-        handler_instance.post_zoo_keeper.return_value = 'ok', 200
-
-        json_data = {'a': 1}
+        json_data = {'name': 'q', 'age': 5}
         response = self.app.post('/zoo_keepers/', json=json_data)
-        self.assertEqual(response.data, b'ok')
+        expected = {
+            'id': 3, 'name': 'q', 'age': 5, 'zoo_id': None, 'favorite_monkey_id': None, 'dream_monkey_id': None,
+            'zoo': {}, 'favorite_monkey': {}, 'dream_monkey': {}
+        }
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), expected)
 
-        handler_instance.post_zoo_keeper.assert_called_once_with(session_instance, json_data)
-        session_instance.close.assert_called_once_with()
+        self.assertEqual(TestSession.close_counts(), 1)
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -151,17 +107,17 @@ class TestFlaskApp(unittest.TestCase):
         handler_instance.get_all_zoo_keepers.assert_called_once_with(session_instance)
         session_instance.close.assert_called_once_with()
 
-    @patch(SESSION_PATCH_STR)
-    @patch(HANDLER_PATCH_STR)
-    def test_all_monkeys_get(self, handler_class, session_class):
-        handler_instance, session_instance = create_instances(handler_class, session_class)
-        handler_instance.get_all_monkeys.return_value = 'ok', 200
-
+    @patch("requests.get", MockRequests.get)
+    def test_all_monkeys_get(self):
         response = self.app.get('/monkeys/')
-        self.assertEqual(response.data, b'ok')
+        expected =[
+            {'id': 1, 'zoo_id': 1},
+            {'id': 2, 'zoo_id': 1},
+            {'id': 3, 'zoo_id': 2},
+            {'id': 4, 'zoo_id': 2}
+        ]
+        self.assertEqual(json.loads(response.data), expected)
         self.assertEqual(response.status_code, 200)
-
-        handler_instance.get_all_monkeys.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -175,17 +131,15 @@ class TestFlaskApp(unittest.TestCase):
 
         handler_instance.get_all_monkeys.assert_called_once_with()
 
-    @patch(SESSION_PATCH_STR)
-    @patch(HANDLER_PATCH_STR)
-    def test_all_zoos_get(self, handler_class, session_class):
-        handler_instance, session_instance = create_instances(handler_class, session_class)
-        handler_instance.get_all_zoos.return_value = 'good', 200
-
+    @patch("requests.get", MockRequests.get)
+    def test_all_zoos_get(self):
         response = self.app.get('/zoos/')
-        self.assertEqual(response.data, b'good')
+        expected =[
+            {'id': 1, 'monkeys': [{'id': 1, 'zoo_id': 1}, {'id': 2, 'zoo_id': 1}]},
+            {'id': 2, 'monkeys': [{'id': 3, 'zoo_id': 2}, {'id': 4, 'zoo_id': 2}]}
+        ]
+        self.assertEqual(json.loads(response.data), expected)
         self.assertEqual(response.status_code, 200)
-
-        handler_instance.get_all_zoos.assert_called_once_with()
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -199,17 +153,18 @@ class TestFlaskApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         handler_instance.get_all_zoos.assert_called_once_with()
 
-    @patch(SESSION_PATCH_STR)
-    @patch(HANDLER_PATCH_STR)
-    def test_zoo_keeper_by_id_get(self, handler_class, session_class):
-        handler_instance, session_instance = create_instances(handler_class, session_class)
-        handler_instance.get_zoo_keeper.return_value = 'ok', 200
+    @patch(SESSION_PATCH_STR, TestSession)
+    @patch("requests.get", MockRequests.get)
+    def test_zoo_keeper_by_id_get(self):
 
-        response = self.app.get('/zoo_keepers/1')
-        self.assertEqual(response.data, b'ok')
+        response = self.app.get('/zoo_keepers/2')
+        expected = {'id': 2, 'name': 'b', 'age': 2, 'zoo_id': None, 'zoo': {},
+                    'favorite_monkey_id': None, 'favorite_monkey': {},
+                    'dream_monkey_id': None, 'dream_monkey': {}}
+        self.assertEqual(json.loads(response.data), expected)
         self.assertEqual(response.status_code, 200)
-        handler_instance.get_zoo_keeper.assert_called_once_with(session_instance, '1')
-        session_instance.close.assert_called_once_with()
+
+        self.assertEqual(TestSession.close_counts(), 1)
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -230,16 +185,23 @@ class TestFlaskApp(unittest.TestCase):
         handler_instance.get_zoo_keeper.assert_called_once_with(session_instance, '100')
         session_instance.close.assert_called_once_with()
 
-    @patch(SESSION_PATCH_STR)
-    @patch(HANDLER_PATCH_STR)
-    def test_zoo_keeper_by_id_delete(self, handler_class, session_class):
-        handler_instance, session_instance = create_instances(handler_class, session_class)
-        handler_instance.delete_zoo_keeper.return_value = 'ok', 200
+    @patch(SESSION_PATCH_STR, TestSession)
+    @patch("requests.get", MockRequests.get)
+    def test_zoo_keeper_by_id_delete(self):
         response = self.app.delete('/zoo_keepers/1')
-        self.assertEqual(response.data, b'ok')
+        all_keepers = [
+            {'age': 2, 'dream_monkey': {}, 'dream_monkey_id': None, 'favorite_monkey': {},
+             'favorite_monkey_id': None, 'id': 2, 'name': 'b', 'zoo': {}, 'zoo_id': None}
+        ]
+        self.assertEqual(json.loads(response.data), all_keepers)
         self.assertEqual(response.status_code, 200)
-        handler_instance.delete_zoo_keeper.assert_called_once_with(session_instance, '1')
-        session_instance.close.assert_called_once_with()
+        self.assertEqual(TestSession.close_counts(), 1)
+
+        bad_id = self.app.get('/zoo_keepers/1')
+        error_msg = {'error': 404, 'error_type': 'BadId', 'text': 'id does not exist: 1', 'title': 'not found'}
+        self.assertEqual(json.loads(bad_id.data), error_msg)
+        self.assertEqual(bad_id.status_code, 404)
+        self.assertEqual(TestSession.close_counts(), 2)
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)
@@ -260,17 +222,18 @@ class TestFlaskApp(unittest.TestCase):
         handler_instance.delete_zoo_keeper.assert_called_once_with(session_instance, '1000')
         session_instance.close.assert_called_once_with()
 
-    @patch(SESSION_PATCH_STR)
-    @patch(HANDLER_PATCH_STR)
-    def test_zoo_keeper_by_id_put(self, handler_class, session_class):
-        handler_instance, session_instance = create_instances(handler_class, session_class)
-        handler_instance.put_zoo_keeper.return_value = 'ok', 200
+    @patch(SESSION_PATCH_STR, TestSession)
+    @patch("requests.get", MockRequests.get)
+    def test_zoo_keeper_by_id_put(self):
 
-        response = self.app.put('/zoo_keepers/1', json={'a': 1})
+        response = self.app.put('/zoo_keepers/2', json={'age': 100})
+        expected = {
+            'id': 2, 'name': 'b', 'age': 100, 'zoo_id': None, 'favorite_monkey_id': None,
+            'dream_monkey_id': None, 'zoo': {}, 'dream_monkey': {}, 'favorite_monkey': {}
+        }
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, b'ok')
-        handler_instance.put_zoo_keeper.assert_called_once_with(session_instance, '1', {'a': 1})
-        session_instance.close.assert_called_once_with()
+        self.assertEqual(json.loads(response.data), expected)
+        self.assertEqual(TestSession.close_counts(), 1)
 
     @patch(SESSION_PATCH_STR)
     @patch(HANDLER_PATCH_STR)

@@ -22,7 +22,7 @@ class TestDBRequestHandler(unittest.TestCase):
         self.session = test_data.TestSession()
         self.handler = DBRequestHandler(ZooServiceRequestHandler("http://localhost:8080"))
         test_data.create_all_test_data(self.session)
-        self.maxDiff = None
+        self.session.reset_commit_count()
 
     def tearDown(self):
         self.session.close()
@@ -192,6 +192,8 @@ class TestDBRequestHandler(unittest.TestCase):
         second_answer = self.handler.get_zoo_keeper(self.session, expected['id'])
         self.assertEqual(first_answer, second_answer)
 
+        self.assertEqual(test_data.TestSession.commit_counts(), 1)
+
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_post_zoo_keeper_all_fields(self):
         to_post = {
@@ -255,6 +257,8 @@ class TestDBRequestHandler(unittest.TestCase):
         get_response = self.handler.get_zoo_keeper(self.session, to_put_id)
         self.assertEqual(get_response, response)
 
+        self.assertEqual(test_data.TestSession.commit_counts(), 1)
+
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_put_zoo_keeper_partial(self):
         to_put_id = 4
@@ -308,6 +312,8 @@ class TestDBRequestHandler(unittest.TestCase):
         self.assertEqual(response[1], 200)
 
         self.assertRaises(BadId, self.handler.get_zoo_keeper, self.session, 1)
+
+        self.assertEqual(test_data.TestSession.commit_counts(), 1)
 
     @patch(REQUESTS_GET_PATCH, MockRequests.get)
     def test_delete_zoo_keeper_bad_id(self):

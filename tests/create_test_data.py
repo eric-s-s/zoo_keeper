@@ -4,8 +4,7 @@ import csv
 from unittest.mock import patch
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import Session as BaseSession
+from sqlalchemy.orm import Session
 from tests import TEST_DATA
 from tests.mock_requests import MockRequests
 from zoo_keeper_server.zoo_keeper import Base, ZooKeeper
@@ -13,8 +12,9 @@ from zoo_keeper_server.zoo_keeper import Base, ZooKeeper
 engine = create_engine("sqlite:///:memory:")
 
 
-class TestSession(BaseSession):
+class TestSession(Session):
     _close_counts = []
+    _commit_counts = []
 
     def __init__(self):
         super(TestSession, self).__init__(bind=engine)
@@ -23,17 +23,25 @@ class TestSession(BaseSession):
     def close_counts(cls):
         return len(cls._close_counts)
 
+    @classmethod
+    def commit_counts(cls):
+        return len(cls._commit_counts)
+
     def close(self):
         self._close_counts.append(1)
-        print('closed', self.close_counts())
         super(TestSession, self).close()
+
+    def commit(self):
+        self._commit_counts.append(1)
+        super(TestSession, self).commit()
 
     @classmethod
     def reset_close_count(cls):
         cls._close_counts = []
 
-
-# TestSession = sessionmaker(bind=engine, class_=MySession)
+    @classmethod
+    def reset_commit_count(cls):
+        cls._commit_counts = []
 
 
 def load_csv(file_path):
@@ -65,13 +73,28 @@ def _convert_value(value):
         return value
 
 
-def create_all_test_data(session: BaseSession):
+def create_empty_database(session):
     Base.metadata.create_all(engine)
-
     for zoo_keeper in session.query(ZooKeeper).all():
         session.delete(zoo_keeper)
     session.commit()
+
+
+def create_all_test_data(session: Session):
+    create_empty_database(session)
     load_zoo_keeper(session)
+
+
+def create_simple_test_data(session: Session):
+    create_empty_database(session)
+    data = [
+        {'name': 'a', 'age': 1, 'zoo_id': 1, 'favorite_monkey_id': 2, 'dream_monkey_id': 1},
+        {'name': 'b', 'age': 2}
+    ]
+    for kwargs in data:
+        keeper = ZooKeeper(**kwargs)
+        session.add(keeper)
+    session.commit()
 
 
 if __name__ == '__main__':
